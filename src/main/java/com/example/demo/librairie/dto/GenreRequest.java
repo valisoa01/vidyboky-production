@@ -11,10 +11,10 @@ import lombok.*;
 @Builder
 public class GenreRequest {
 
-    @NotBlank(message = "Genre name is required")
-    @Size(max = 100)
-    private String name;
+  @NotBlank(message = "Genre name is required")
+  @Size(max = 100)
+  private String name;
 
-    @Size(max = 255)
-    private String description;
+  @Size(max = 255)
+  private String description;
 }

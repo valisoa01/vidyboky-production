@@ -7,13 +7,11 @@ import com.example.demo.librairie.entity.Genre;
 import com.example.demo.librairie.repository.AuthorRepository;
 import com.example.demo.librairie.repository.BookRepository;
 import com.example.demo.librairie.repository.GenreRepository;
-import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -29,8 +27,8 @@ public class BookService {
 
   public Book getById(UUID id) {
     return bookRepository
-            .findById(id)
-            .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
+        .findById(id)
+        .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
   }
 
   public List<Book> getLivreByTitle(String title) {
@@ -68,7 +66,8 @@ public class BookService {
   }
 
   public Book updateLivre(UUID id, BookRequest request) {
-    Book book = bookRepository
+    Book book =
+        bookRepository
             .findById(id)
             .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
 
@@ -78,7 +77,7 @@ public class BookService {
     book.setUrl(request.getUrl());
     book.setPublicationDate(request.getPublicationDate());
 
-     if (request.getGenreIds() != null) {
+    if (request.getGenreIds() != null) {
       List<Genre> genres = genreRepository.findAllById(request.getGenreIds());
       book.setGenres(genres);
     }

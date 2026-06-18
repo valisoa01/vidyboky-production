@@ -2,11 +2,10 @@ package com.example.demo.librairie.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import lombok.*;
 
 @Entity
 @Table(name = "book")
@@ -41,17 +40,17 @@ public class Book {
 
   @ManyToMany
   @JoinTable(
-          name = "book_genre",
-          joinColumns = @JoinColumn(name = "book_id"),
-          inverseJoinColumns = @JoinColumn(name = "genre_id"))
+      name = "book_genre",
+      joinColumns = @JoinColumn(name = "book_id"),
+      inverseJoinColumns = @JoinColumn(name = "genre_id"))
   @JsonIgnore
   private List<Genre> genres;
 
   @ManyToMany
   @JoinTable(
-          name = "book_author",
-          joinColumns = @JoinColumn(name = "book_id"),
-          inverseJoinColumns = @JoinColumn(name = "author_id"))
+      name = "book_author",
+      joinColumns = @JoinColumn(name = "book_id"),
+      inverseJoinColumns = @JoinColumn(name = "author_id"))
   @JsonIgnore
   private List<Author> authors;
 

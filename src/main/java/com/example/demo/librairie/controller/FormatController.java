@@ -4,12 +4,11 @@ import com.example.demo.librairie.dto.FormatRequest;
 import com.example.demo.librairie.dto.FormatResponse;
 import com.example.demo.librairie.service.FormatService;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/formats")
