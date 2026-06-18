@@ -42,7 +42,7 @@ public class BookController {
     }
   }
 
-  @GetMapping("/search/title")
+  @GetMapping("/searchByTitle")
   public ResponseEntity<List<BookResponse>> getByTitle(@RequestParam String title) {
     List<Book> books = bookService.getLivreByTitle(title);
     List<BookResponse> responses =
@@ -58,7 +58,7 @@ public class BookController {
     return ResponseEntity.ok(responses);
   }
 
-  @GetMapping("/search/date")
+  @GetMapping("/searchByDate")
   public ResponseEntity<List<BookResponse>> getByDate(
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
     List<Book> books = bookService.getLivreByDate(date);
