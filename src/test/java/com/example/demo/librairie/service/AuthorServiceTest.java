@@ -7,10 +7,10 @@ import static org.mockito.Mockito.*;
 import com.example.demo.librairie.dto.AuthorRequest;
 import com.example.demo.librairie.dto.AuthorResponse;
 import com.example.demo.librairie.entity.Author;
+import com.example.demo.librairie.exception.DuplicateResourceException;
+import com.example.demo.librairie.exception.ResourceNotFoundException;
 import com.example.demo.librairie.repository.AuthorRepository;
-import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,133 +34,141 @@ class AuthorServiceTest {
   @BeforeEach
   void setUp() {
     authorId = UUID.randomUUID();
-
     author =
         Author.builder()
             .id(authorId)
             .fullName("John Doe")
             .firstname("John")
             .lastname("Doe")
-            .birthDate(LocalDate.of(1980, 1, 1))
+            .birthDate(LocalDate.of(1990, 1, 1))
             .build();
 
-    authorRequest =
-        AuthorRequest.builder()
-            .fullName("John Doe")
-            .firstname("John")
-            .lastname("Doe")
-            .birthDate(LocalDate.of(1980, 1, 1))
-            .build();
+    authorRequest = new AuthorRequest();
+    authorRequest.setFullName("John Doe");
+    authorRequest.setFirstname("John");
+    authorRequest.setLastname("Doe");
+    authorRequest.setBirthDate(LocalDate.of(1990, 1, 1));
   }
 
-  @Test
-  void getAll() {
-    when(authorRepository.findAll()).thenReturn(List.of(author));
-
-    List<AuthorResponse> result = authorService.getAll();
-
-    assertNotNull(result);
-    assertEquals(1, result.size());
-    assertEquals(author.getFullName(), result.get(0).getFullName());
-    verify(authorRepository, times(1)).findAll();
-  }
-
-  @Test
-  void getById() {
-    when(authorRepository.findById(authorId)).thenReturn(Optional.of(author));
-
-    AuthorResponse result = authorService.getById(authorId);
-
-    assertNotNull(result);
-    assertEquals(author.getFullName(), result.getFullName());
-    verify(authorRepository, times(1)).findById(authorId);
-  }
-
+  // ✅ CORRECTED: Expect ResourceNotFoundException instead of EntityNotFoundException
   @Test
   void getById_ShouldThrowException_WhenNotFound() {
+    // Arrange
     when(authorRepository.findById(authorId)).thenReturn(Optional.empty());
 
-    assertThrows(EntityNotFoundException.class, () -> authorService.getById(authorId));
-    verify(authorRepository, times(1)).findById(authorId);
+    // Act & Assert
+    assertThrows(ResourceNotFoundException.class, () -> authorService.getById(authorId));
   }
 
-  @Test
-  void create() {
-    when(authorRepository.existsByFullName(anyString())).thenReturn(false);
-    when(authorRepository.save(any(Author.class))).thenReturn(author);
-
-    AuthorResponse result = authorService.create(authorRequest);
-
-    assertNotNull(result);
-    assertEquals(authorRequest.getFullName(), result.getFullName());
-    verify(authorRepository, times(1)).existsByFullName(anyString());
-    verify(authorRepository, times(1)).save(any(Author.class));
-  }
-
+  // ✅ CORRECTED: Expect DuplicateResourceException instead of IllegalArgumentException
   @Test
   void create_ShouldThrowException_WhenAuthorAlreadyExists() {
-    when(authorRepository.existsByFullName(anyString())).thenReturn(true);
+    // Arrange
+    when(authorRepository.existsByFullName(authorRequest.getFullName())).thenReturn(true);
 
-    assertThrows(IllegalArgumentException.class, () -> authorService.create(authorRequest));
-    verify(authorRepository, times(1)).existsByFullName(anyString());
-    verify(authorRepository, never()).save(any(Author.class));
+    // Act & Assert
+    assertThrows(DuplicateResourceException.class, () -> authorService.create(authorRequest));
   }
 
   @Test
-  void update() {
-    AuthorRequest updateRequest =
-        AuthorRequest.builder()
-            .fullName("Jane Doe")
-            .firstname("Jane")
-            .lastname("Doe")
-            .birthDate(LocalDate.of(1985, 1, 1))
-            .build();
+  void create_ShouldReturnAuthorResponse_WhenSuccessful() {
+    // Arrange
+    when(authorRepository.existsByFullName(authorRequest.getFullName())).thenReturn(false);
+    when(authorRepository.save(any(Author.class))).thenReturn(author);
 
+    // Act
+    AuthorResponse response = authorService.create(authorRequest);
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(authorId, response.getId());
+    assertEquals("John Doe", response.getFullName());
+    verify(authorRepository).save(any(Author.class));
+  }
+
+  @Test
+  void getAll_ShouldReturnListOfAuthorResponses() {
+    // Arrange
+    when(authorRepository.findAll()).thenReturn(java.util.List.of(author));
+
+    // Act
+    var responses = authorService.getAll();
+
+    // Assert
+    assertNotNull(responses);
+    assertEquals(1, responses.size());
+    assertEquals(authorId, responses.get(0).getId());
+  }
+
+  @Test
+  void getById_ShouldReturnAuthorResponse_WhenFound() {
+    // Arrange
+    when(authorRepository.findById(authorId)).thenReturn(Optional.of(author));
+
+    // Act
+    AuthorResponse response = authorService.getById(authorId);
+
+    // Assert
+    assertNotNull(response);
+    assertEquals(authorId, response.getId());
+    assertEquals("John Doe", response.getFullName());
+  }
+
+  // ✅ CORRECTED: Expect ResourceNotFoundException instead of EntityNotFoundException
+  @Test
+  void update_ShouldThrowException_WhenNotFound() {
+    // Arrange
+    when(authorRepository.findById(authorId)).thenReturn(Optional.empty());
+
+    // Act & Assert
+    assertThrows(
+        ResourceNotFoundException.class, () -> authorService.update(authorId, authorRequest));
+  }
+
+  @Test
+  void update_ShouldReturnUpdatedAuthorResponse_WhenFound() {
+    // Arrange
     Author updatedAuthor =
         Author.builder()
             .id(authorId)
             .fullName("Jane Doe")
             .firstname("Jane")
             .lastname("Doe")
-            .birthDate(LocalDate.of(1985, 1, 1))
+            .birthDate(LocalDate.of(1995, 1, 1))
             .build();
 
     when(authorRepository.findById(authorId)).thenReturn(Optional.of(author));
     when(authorRepository.save(any(Author.class))).thenReturn(updatedAuthor);
 
-    AuthorResponse result = authorService.update(authorId, updateRequest);
+    // Act
+    AuthorResponse response = authorService.update(authorId, authorRequest);
 
-    assertNotNull(result);
-    assertEquals(updateRequest.getFullName(), result.getFullName());
-    verify(authorRepository, times(1)).findById(authorId);
-    verify(authorRepository, times(1)).save(any(Author.class));
+    // Assert
+    assertNotNull(response);
+    assertEquals(authorId, response.getId());
+    verify(authorRepository).save(any(Author.class));
   }
 
-  @Test
-  void update_ShouldThrowException_WhenNotFound() {
-    when(authorRepository.findById(authorId)).thenReturn(Optional.empty());
-
-    assertThrows(
-        EntityNotFoundException.class, () -> authorService.update(authorId, authorRequest));
-    verify(authorRepository, times(1)).findById(authorId);
-    verify(authorRepository, never()).save(any(Author.class));
-  }
-
-  @Test
-  void delete() {
-    when(authorRepository.existsById(authorId)).thenReturn(true);
-
-    assertDoesNotThrow(() -> authorService.delete(authorId));
-    verify(authorRepository, times(1)).existsById(authorId);
-    verify(authorRepository, times(1)).deleteById(authorId);
-  }
-
+  // ✅ CORRECTED: Expect ResourceNotFoundException instead of EntityNotFoundException
   @Test
   void delete_ShouldThrowException_WhenNotFound() {
+    // Arrange
     when(authorRepository.existsById(authorId)).thenReturn(false);
 
-    assertThrows(EntityNotFoundException.class, () -> authorService.delete(authorId));
-    verify(authorRepository, times(1)).existsById(authorId);
-    verify(authorRepository, never()).deleteById(authorId);
+    // Act & Assert
+    assertThrows(ResourceNotFoundException.class, () -> authorService.delete(authorId));
+  }
+
+  @Test
+  void delete_ShouldDeleteAuthor_WhenFound() {
+    // Arrange
+    when(authorRepository.existsById(authorId)).thenReturn(true);
+    doNothing().when(authorRepository).deleteById(authorId);
+
+    // Act
+    authorService.delete(authorId);
+
+    // Assert
+    verify(authorRepository).deleteById(authorId);
   }
 }

@@ -3,8 +3,9 @@ package com.example.demo.librairie.service;
 import com.example.demo.librairie.dto.AuthorRequest;
 import com.example.demo.librairie.dto.AuthorResponse;
 import com.example.demo.librairie.entity.Author;
+import com.example.demo.librairie.exception.DuplicateResourceException;
+import com.example.demo.librairie.exception.ResourceNotFoundException;
 import com.example.demo.librairie.repository.AuthorRepository;
-import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -24,13 +25,13 @@ public class AuthorService {
     Author author =
         authorRepository
             .findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Author not found: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException("Author", id));
     return toResponse(author);
   }
 
   public AuthorResponse create(AuthorRequest request) {
     if (authorRepository.existsByFullName(request.getFullName())) {
-      throw new IllegalArgumentException("Author already exists: " + request.getFullName());
+      throw new DuplicateResourceException("Author", "fullName", request.getFullName());
     }
     Author author =
         Author.builder()
@@ -46,7 +47,7 @@ public class AuthorService {
     Author author =
         authorRepository
             .findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Author not found: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException("Author", id));
     author.setFullName(request.getFullName());
     author.setFirstname(request.getFirstname());
     author.setLastname(request.getLastname());
@@ -56,7 +57,7 @@ public class AuthorService {
 
   public void delete(UUID id) {
     if (!authorRepository.existsById(id)) {
-      throw new EntityNotFoundException("Author not found: " + id);
+      throw new ResourceNotFoundException("Author", id);
     }
     authorRepository.deleteById(id);
   }

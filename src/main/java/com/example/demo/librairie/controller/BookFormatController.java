@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/book-formats")
+@RequestMapping("/book-formats")
 @RequiredArgsConstructor
 public class BookFormatController {
 
