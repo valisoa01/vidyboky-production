@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/formats")
+@RequestMapping("/api/formats")
 @RequiredArgsConstructor
 public class FormatController {
 
