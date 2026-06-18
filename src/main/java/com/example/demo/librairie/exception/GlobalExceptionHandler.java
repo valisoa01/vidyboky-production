@@ -15,76 +15,79 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // ── 404 — ressource introuvable ──────────────────────────────────────────
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiError> handleNotFound(
-            ResourceNotFoundException ex, HttpServletRequest request) {
+  // ── 404 — ressource introuvable ──────────────────────────────────────────
+  @ExceptionHandler(ResourceNotFoundException.class)
+  public ResponseEntity<ApiError> handleNotFound(
+      ResourceNotFoundException ex, HttpServletRequest request) {
 
-        return build(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI(), null);
+    return build(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI(), null);
+  }
+
+  // ── 409 — doublon ────────────────────────────────────────────────────────
+  @ExceptionHandler(DuplicateResourceException.class)
+  public ResponseEntity<ApiError> handleDuplicate(
+      DuplicateResourceException ex, HttpServletRequest request) {
+
+    return build(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI(), null);
+  }
+
+  // ── 400 — erreurs de validation (@Valid) ─────────────────────────────────
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<ApiError> handleValidation(
+      MethodArgumentNotValidException ex, HttpServletRequest request) {
+
+    Map<String, String> errors = new LinkedHashMap<>();
+    for (FieldError fe : ex.getBindingResult().getFieldErrors()) {
+      errors.put(fe.getField(), fe.getDefaultMessage());
     }
 
-    // ── 409 — doublon ────────────────────────────────────────────────────────
-    @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<ApiError> handleDuplicate(
-            DuplicateResourceException ex, HttpServletRequest request) {
+    ApiError apiError =
+        ApiError.builder()
+            .timestamp(LocalDateTime.now())
+            .status(HttpStatus.BAD_REQUEST.value())
+            .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
+            .message("Validation failed")
+            .path(request.getRequestURI())
+            .validationErrors(errors)
+            .build();
 
-        return build(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI(), null);
-    }
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiError);
+  }
 
-    // ── 400 — erreurs de validation (@Valid) ─────────────────────────────────
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> handleValidation(
-            MethodArgumentNotValidException ex, HttpServletRequest request) {
+  // ── 400 — mauvais type de paramètre (ex: UUID malformé dans l'URL) ───────
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public ResponseEntity<ApiError> handleTypeMismatch(
+      MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
 
-        Map<String, String> errors = new LinkedHashMap<>();
-        for (FieldError fe : ex.getBindingResult().getFieldErrors()) {
-            errors.put(fe.getField(), fe.getDefaultMessage());
-        }
+    String message = "Invalid value '" + ex.getValue() + "' for parameter '" + ex.getName() + "'";
+    return build(HttpStatus.BAD_REQUEST, message, request.getRequestURI(), null);
+  }
 
-        ApiError apiError = ApiError.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
-                .message("Validation failed")
-                .path(request.getRequestURI())
-                .validationErrors(errors)
-                .build();
+  // ── 500 — erreur inattendue ───────────────────────────────────────────────
+  @ExceptionHandler(Exception.class)
+  public ResponseEntity<ApiError> handleGeneric(Exception ex, HttpServletRequest request) {
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiError);
-    }
+    return build(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        "An unexpected error occurred",
+        request.getRequestURI(),
+        null);
+  }
 
-    // ── 400 — mauvais type de paramètre (ex: UUID malformé dans l'URL) ───────
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiError> handleTypeMismatch(
-            MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+  // ── Helper ────────────────────────────────────────────────────────────────
+  private ResponseEntity<ApiError> build(
+      HttpStatus status, String message, String path, Map<String, String> validationErrors) {
 
-        String message = "Invalid value '" + ex.getValue()
-                + "' for parameter '" + ex.getName() + "'";
-        return build(HttpStatus.BAD_REQUEST, message, request.getRequestURI(), null);
-    }
+    ApiError apiError =
+        ApiError.builder()
+            .timestamp(LocalDateTime.now())
+            .status(status.value())
+            .error(status.getReasonPhrase())
+            .message(message)
+            .path(path)
+            .validationErrors(validationErrors)
+            .build();
 
-    // ── 500 — erreur inattendue ───────────────────────────────────────────────
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> handleGeneric(
-            Exception ex, HttpServletRequest request) {
-
-        return build(HttpStatus.INTERNAL_SERVER_ERROR,
-                "An unexpected error occurred", request.getRequestURI(), null);
-    }
-
-    // ── Helper ────────────────────────────────────────────────────────────────
-    private ResponseEntity<ApiError> build(
-            HttpStatus status, String message, String path, Map<String, String> validationErrors) {
-
-        ApiError apiError = ApiError.builder()
-                .timestamp(LocalDateTime.now())
-                .status(status.value())
-                .error(status.getReasonPhrase())
-                .message(message)
-                .path(path)
-                .validationErrors(validationErrors)
-                .build();
-
-        return ResponseEntity.status(status).body(apiError);
-    }
+    return ResponseEntity.status(status).body(apiError);
+  }
 }
