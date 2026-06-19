@@ -4,6 +4,7 @@ import com.example.demo.librairie.dto.BookRequest;
 import com.example.demo.librairie.entity.Author;
 import com.example.demo.librairie.entity.Book;
 import com.example.demo.librairie.entity.Genre;
+import com.example.demo.librairie.exception.ResourceNotFoundException;
 import com.example.demo.librairie.repository.AuthorRepository;
 import com.example.demo.librairie.repository.BookRepository;
 import com.example.demo.librairie.repository.GenreRepository;
@@ -28,7 +29,7 @@ public class BookService {
   public Book getById(UUID id) {
     return bookRepository
         .findById(id)
-        .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
+        .orElseThrow(() -> new ResourceNotFoundException("Book",id));
   }
 
   public List<Book> getLivreByTitle(String title) {
@@ -69,7 +70,7 @@ public class BookService {
     Book book =
         bookRepository
             .findById(id)
-            .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException("Book",id));
 
     book.setTitle(request.getTitle());
     book.setIsbn(request.getIsbn());
@@ -92,7 +93,7 @@ public class BookService {
 
   public void deleteLivre(UUID id) {
     if (!bookRepository.existsById(id)) {
-      throw new RuntimeException("Book not found with id: " + id);
+      throw new ResourceNotFoundException("Book",id));
     }
     bookRepository.deleteById(id);
   }
