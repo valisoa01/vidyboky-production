@@ -32,15 +32,17 @@ public class BookController {
     return ResponseEntity.ok(responses);
   }
 
-  @GetMapping("/{id}")
-  public ResponseEntity<BookResponse> getById(@PathVariable UUID id) {
-    try {
-      Book book = bookService.getById(id);
-      return ResponseEntity.ok(toResponse(book));
-    } catch (RuntimeException e) {
-      return ResponseEntity.notFound().build();
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getById(@PathVariable UUID id) {
+        try {
+            Book book = bookService.getById(id);
+            return ResponseEntity.ok(toResponse(book));
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("Livre introuvable");
+        }
     }
-  }
 
   @GetMapping("/search/title")
   public ResponseEntity<List<BookResponse>> getByTitle(@RequestParam String title) {
