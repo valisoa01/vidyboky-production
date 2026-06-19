@@ -27,9 +27,7 @@ public class BookService {
   }
 
   public Book getById(UUID id) {
-    return bookRepository
-        .findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("Book",id));
+    return bookRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Book", id));
   }
 
   public List<Book> getLivreByTitle(String title) {
@@ -68,9 +66,7 @@ public class BookService {
 
   public Book updateLivre(UUID id, BookRequest request) {
     Book book =
-        bookRepository
-            .findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Book",id));
+        bookRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Book", id));
 
     book.setTitle(request.getTitle());
     book.setIsbn(request.getIsbn());
@@ -93,7 +89,7 @@ public class BookService {
 
   public void deleteLivre(UUID id) {
     if (!bookRepository.existsById(id)) {
-      throw new ResourceNotFoundException("Book",id));
+      throw new ResourceNotFoundException("Book", id);
     }
     bookRepository.deleteById(id);
   }
