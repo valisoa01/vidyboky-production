@@ -34,8 +34,8 @@ public class BookController {
 
   @GetMapping("/{id}")
   public BookResponse getById(@PathVariable UUID id) {
-      Book book = bookService.getById(id);
-      return toResponse(book);
+    Book book = bookService.getById(id);
+    return toResponse(book);
   }
 
   @GetMapping("/searchByTitle")
