@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -63,5 +64,11 @@ public class StockController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @GetMapping("/current-stock/summary")
+    public ResponseEntity<Map<String, Integer>> getStockSummary() {
+        Map<String, Integer> summary = stockService.getStockSummary();
+        return ResponseEntity.ok(summary);
     }
 }

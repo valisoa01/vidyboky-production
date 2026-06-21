@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -104,5 +106,24 @@ public class StockService {
                 .bookTitle(stock.getBookFormat().getBook().getTitle())
                 .formatType(stock.getBookFormat().getFormat().getFormatType())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Integer> getStockSummary() {
+        List<BookFormat> bookFormats = bookFormatRepository.findAll();
+        Map<String, Integer> summary = new HashMap<>();
+
+        for (BookFormat bookFormat : bookFormats) {
+            String formatType = bookFormat.getFormat().getFormatType();
+            Integer currentStock = getCurrentStock(bookFormat.getId());
+
+            if (summary.containsKey(formatType)) {
+                summary.put(formatType, summary.get(formatType) + currentStock);
+            } else {
+                summary.put(formatType, currentStock);
+            }
+        }
+
+        return summary;
     }
 }
