@@ -101,17 +101,20 @@ public class StockService {
     return toResponse(stockRepository.save(stock));
   }
 
-  private StockResponse toResponse(Stock stock) {
-    return StockResponse.builder()
-        .id(stock.getId())
-        .movement(stock.getMovement())
-        .quantity(stock.getQuantity())
-        .movementDate(stock.getMovementDate())
-        .bookFormatId(stock.getBookFormat().getId())
-        .bookTitle(stock.getBookFormat().getBook().getTitle())
-        .formatType(stock.getBookFormat().getFormat().getFormatType())
-        .build();
-  }
+    private StockResponse toResponse(Stock stock) {
+        Integer currentStock = getCurrentStock(stock.getBookFormat().getId());
+
+        return StockResponse.builder()
+                .id(stock.getId())
+                .movement(stock.getMovement())
+                .quantity(stock.getQuantity())
+                .movementDate(stock.getMovementDate())
+                .bookFormatId(stock.getBookFormat().getId())
+                .bookTitle(stock.getBookFormat().getBook().getTitle())
+                .formatType(stock.getBookFormat().getFormat().getFormatType())
+                .currentStock(currentStock)
+                .build();
+    }
 
   @Transactional(readOnly = true)
   public Map<String, Integer> getStockSummary() {
