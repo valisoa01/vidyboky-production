@@ -14,13 +14,11 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StockResponse {
-
     private UUID id;
     private MovementType movement;
     private Integer quantity;
     private LocalDateTime movementDate;
     private UUID bookFormatId;
-
     private String bookTitle;
     private String formatType;
 }

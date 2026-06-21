@@ -35,6 +35,26 @@ public class StockController {
         }
     }
 
+    @GetMapping("/book-format/{bookFormatId}")
+    public ResponseEntity<List<StockResponse>> getByBookFormatId(@PathVariable UUID bookFormatId) {
+        try {
+            List<StockResponse> stocks = stockService.getByBookFormatId(bookFormatId);
+            return ResponseEntity.ok(stocks);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/book-format/{bookFormatId}/current-stock")
+    public ResponseEntity<Integer> getCurrentStock(@PathVariable UUID bookFormatId) {
+        try {
+            Integer currentStock = stockService.getCurrentStock(bookFormatId);
+            return ResponseEntity.ok(currentStock);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PostMapping
     public ResponseEntity<StockResponse> create(@Valid @RequestBody StockRequest request) {
         try {
