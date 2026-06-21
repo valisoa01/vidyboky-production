@@ -33,13 +33,8 @@ public class BookController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<BookResponse> getById(@PathVariable UUID id) {
-    try {
-      Book book = bookService.getById(id);
-      return ResponseEntity.ok(toResponse(book));
-    } catch (RuntimeException e) {
-      return ResponseEntity.notFound().build();
-    }
+  public BookResponse getById(@PathVariable UUID id) {
+    return toResponse(bookService.getById(id));
   }
 
   @GetMapping("/searchByTitle")
