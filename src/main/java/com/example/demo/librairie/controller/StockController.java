@@ -61,16 +61,6 @@ public class StockController {
       StockResponse response = stockService.create(request);
       return ResponseEntity.status(HttpStatus.CREATED).body(response);
     } catch (RuntimeException e) {
-      String message = e.getMessage();
-
-      if (message != null && message.startsWith("BookFormat not found")) {
-        return ResponseEntity.notFound().build();
-      }
-
-      if (message != null && message.startsWith("Stock insuffisant")) {
-        return ResponseEntity.badRequest().build();
-      }
-
       return ResponseEntity.badRequest().build();
     }
   }
