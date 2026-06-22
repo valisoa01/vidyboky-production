@@ -102,6 +102,8 @@ public class StockService {
   }
 
   private StockResponse toResponse(Stock stock) {
+    Integer currentStock = getCurrentStock(stock.getBookFormat().getId());
+
     return StockResponse.builder()
         .id(stock.getId())
         .movement(stock.getMovement())
@@ -110,6 +112,7 @@ public class StockService {
         .bookFormatId(stock.getBookFormat().getId())
         .bookTitle(stock.getBookFormat().getBook().getTitle())
         .formatType(stock.getBookFormat().getFormat().getFormatType())
+        .currentStock(currentStock)
         .build();
   }
 
