@@ -20,5 +20,4 @@ public class StockResponse {
   private UUID bookFormatId;
   private String bookTitle;
   private String formatType;
-  private Integer currentStock;
 }
