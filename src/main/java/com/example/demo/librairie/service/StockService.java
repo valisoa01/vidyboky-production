@@ -4,7 +4,7 @@ import com.example.demo.librairie.dto.StockRequest;
 import com.example.demo.librairie.dto.StockResponse;
 import com.example.demo.librairie.entity.BookFormat;
 import com.example.demo.librairie.entity.MovementType;
-import com.example.demo.librairie.entity.Stock;
+import com.example.demo.librairie.entity.StockMovement;
 import com.example.demo.librairie.repository.BookFormatRepository;
 import com.example.demo.librairie.repository.StockRepository;
 import java.time.LocalDateTime;
@@ -31,11 +31,11 @@ public class StockService {
 
   @Transactional(readOnly = true)
   public StockResponse getById(UUID id) {
-    Stock stock =
+    StockMovement stockMovement =
         stockRepository
             .findById(id)
             .orElseThrow(() -> new RuntimeException("Stock not found with id: " + id));
-    return toResponse(stock);
+    return toResponse(stockMovement);
   }
 
   @Transactional(readOnly = true)
@@ -55,15 +55,15 @@ public class StockService {
       throw new RuntimeException("BookFormat not found with id: " + bookFormatId);
     }
 
-    List<Stock> stocks = stockRepository.findByBookFormatId(bookFormatId);
+    List<StockMovement> stockMovements = stockRepository.findByBookFormatId(bookFormatId);
 
-    return stocks.stream()
+    return stockMovements.stream()
         .mapToInt(
-            stock -> {
-              if (stock.getMovement() == MovementType.IN) {
-                return stock.getQuantity();
+                stockMovement -> {
+              if (stockMovement.getMovement() == MovementType.IN) {
+                return stockMovement.getQuantity();
               } else { // OUT
-                return -stock.getQuantity();
+                return -stockMovement.getQuantity();
               }
             })
         .sum();
@@ -90,26 +90,26 @@ public class StockService {
       }
     }
 
-    Stock stock =
-        Stock.builder()
+    StockMovement stockMovement =
+        StockMovement.builder()
             .movement(request.getMovement())
             .quantity(request.getQuantity())
             .movementDate(LocalDateTime.now())
             .bookFormat(bookFormat)
             .build();
 
-    return toResponse(stockRepository.save(stock));
+    return toResponse(stockRepository.save(stockMovement));
   }
 
-  private StockResponse toResponse(Stock stock) {
+  private StockResponse toResponse(StockMovement stockMovement) {
     return StockResponse.builder()
-        .id(stock.getId())
-        .movement(stock.getMovement())
-        .quantity(stock.getQuantity())
-        .movementDate(stock.getMovementDate())
-        .bookFormatId(stock.getBookFormat().getId())
-        .bookTitle(stock.getBookFormat().getBook().getTitle())
-        .formatType(stock.getBookFormat().getFormat().getFormatType())
+        .id(stockMovement.getId())
+        .movement(stockMovement.getMovement())
+        .quantity(stockMovement.getQuantity())
+        .movementDate(stockMovement.getMovementDate())
+        .bookFormatId(stockMovement.getBookFormat().getId())
+        .bookTitle(stockMovement.getBookFormat().getBook().getTitle())
+        .formatType(stockMovement.getBookFormat().getFormat().getFormatType())
         .build();
   }
 
