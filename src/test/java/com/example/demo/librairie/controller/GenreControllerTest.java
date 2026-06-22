@@ -84,18 +84,21 @@ class GenreServiceTest {
 
     @Test
     void create_ShouldSaveAndReturnGenre() {
-        Genre newGenre = Genre.builder()
+        // Créer un genre qui correspond à la requête
+        Genre savedGenre = Genre.builder()
+                .id(genreId)
                 .name(genreRequest.getName())
                 .description(genreRequest.getDescription())
                 .build();
 
-        when(genreRepository.save(any(Genre.class))).thenReturn(genre);
+        when(genreRepository.save(any(Genre.class))).thenReturn(savedGenre);
 
         GenreResponse result = genreService.create(genreRequest);
 
         assertNotNull(result);
-        assertEquals(genre.getId(), result.getId());
+        assertEquals(genreId, result.getId());
         assertEquals(genreRequest.getName(), result.getName());
+        assertEquals(genreRequest.getDescription(), result.getDescription());
         verify(genreRepository, times(1)).save(any(Genre.class));
     }
 
