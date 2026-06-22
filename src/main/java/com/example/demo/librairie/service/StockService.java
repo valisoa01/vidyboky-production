@@ -59,7 +59,7 @@ public class StockService {
 
     return stockMovements.stream()
         .mapToInt(
-                stockMovement -> {
+            stockMovement -> {
               if (stockMovement.getMovement() == MovementType.IN) {
                 return stockMovement.getQuantity();
               } else { // OUT
