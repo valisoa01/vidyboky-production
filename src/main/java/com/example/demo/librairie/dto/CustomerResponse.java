@@ -1,9 +1,7 @@
 package com.example.demo.librairie.dto;
 
-import lombok.*;
-
 import java.util.UUID;
-
+import lombok.*;
 
 @Getter
 @Setter
@@ -11,10 +9,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class CustomerResponse {
-    private UUID id;
-    private String firstName;
-    private String name;
-    private String email;
-    private String phone;
-    private String address;
+  private UUID id;
+  private String firstName;
+  private String name;
+  private String email;
+  private String phone;
+  private String address;
 }
