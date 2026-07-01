@@ -114,6 +114,10 @@ dependencies {
 
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3'
 
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.postgresql:postgresql'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
     implementation 'com.amazonaws.serverless:aws-serverless-java-container-springboot3:2.1.0'
     implementation 'software.amazon.awssdk:aws-query-protocol:2.20.26'
 
