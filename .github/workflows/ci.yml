@@ -8,10 +8,7 @@ on:
     branches:
       - '*'
   workflow_dispatch:
-
   workflow_call:
-
-
 
 jobs:
   test:
@@ -20,7 +17,11 @@ jobs:
 
     env:
       AWS_REGION: eu-west-3
-      
+      SPRING_PROFILES_ACTIVE: test
+      # Utiliser les secrets pour la base de données
+      NEON_DB_URL: ${{ secrets.NEON_DB_URL }}
+      NEON_DB_USERNAME: ${{ secrets.NEON_DB_USERNAME }}
+      NEON_DB_PASSWORD: ${{ secrets.NEON_DB_PASSWORD }}
 
     steps:
       - uses: actions/checkout@v4.1.6
@@ -29,12 +30,20 @@ jobs:
         with:
           java-version: '21'
           distribution: 'corretto'
+
       - run: chmod +x gradlew
       - run: chmod +x .shell/publish_gen_to_maven_local.sh
-      - run: |
-          ./gradlew test
 
-      
+      # Afficher les variables pour debug (sans les valeurs sensibles)
+      - name: Debug environment
+        run: |
+          echo "AWS_REGION: $AWS_REGION"
+          echo "SPRING_PROFILES_ACTIVE: $SPRING_PROFILES_ACTIVE"
+          echo "NEON_DB_URL exists: ${{ secrets.NEON_DB_URL != '' }}"
+
+      - name: Run tests
+        run: |
+          ./gradlew test --info --stacktrace
 
   format:
     runs-on: ubuntu-latest
