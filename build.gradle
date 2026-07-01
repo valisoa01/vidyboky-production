@@ -24,8 +24,9 @@ repositories {
     mavenCentral()
 }
 
+group = 'com.example.demo'
+
 java {
-    group = 'com.example.demo'
     sourceCompatibility = '21'
     targetCompatibility = '21'
 }
