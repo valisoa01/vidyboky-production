@@ -20,7 +20,8 @@ jobs:
 
     env:
       AWS_REGION: eu-west-3
-      
+      SPRING_PROFILES_ACTIVE: test
+
 
     steps:
       - uses: actions/checkout@v4.1.6
