@@ -1,32 +1,56 @@
 package com.example.demo.librairie.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
+import com.example.demo.librairie.dto.BookResponse;
+import com.example.demo.librairie.dto.BookRequest;
+import com.example.demo.librairie.entity.Book;
+import com.example.demo.librairie.service.BookService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import org.junit.jupiter.api.Test;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.LocalDate;
+import java.util.UUID;
+
+@ExtendWith(MockitoExtension.class)
 class BookControllerTest {
 
-  @Test
-  void getAll() {}
+    @Mock
+    private BookService bookService;
 
-  @Test
-  void getById() {}
+    @InjectMocks
+    private BookController bookController;
 
-  @Test
-  void getByTitle() {}
+    private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
 
-  @Test
-  void getByGenre() {}
+    private UUID bookId;
+    private Book book;
+    private BookRequest bookRequest;
 
-  @Test
-  void getByDate() {}
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(bookController).build();
 
-  @Test
-  void create() {}
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
 
-  @Test
-  void update() {}
+        bookId = UUID.randomUUID();
+        book = new Book();
+        book.setId(bookId);
+        book.setTitle("Test Book");
+        book.setIsbn("978-1234567890");
+        book.setPublicationDate(LocalDate.of(2023, 1, 15));
 
-  @Test
-  void delete() {}
+        bookRequest = new BookRequest();
+        bookRequest.setTitle("Test Book");
+        bookRequest.setIsbn("978-1234567890");
+        bookRequest.setPublicationDate(LocalDate.of(2023, 1, 15));
+    }
 }

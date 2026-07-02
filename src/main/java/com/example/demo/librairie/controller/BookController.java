@@ -81,9 +81,9 @@ public class BookController {
     return ResponseEntity.noContent().build();
   }
 
-  // Méthode de conversion Book -> BookResponse
+
   private BookResponse toResponse(Book book) {
-    // Conversion des auteurs
+
     List<AuthorResponse> authorResponses = null;
     if (book.getAuthors() != null && !book.getAuthors().isEmpty()) {
       authorResponses =
@@ -100,7 +100,6 @@ public class BookController {
               .collect(Collectors.toList());
     }
 
-    // Conversion des genres
     List<GenreResponse> genreResponses = null;
     if (book.getGenres() != null && !book.getGenres().isEmpty()) {
       genreResponses =

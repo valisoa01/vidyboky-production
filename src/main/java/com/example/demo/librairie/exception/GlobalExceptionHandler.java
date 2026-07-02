@@ -15,7 +15,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-  // ── 404 — ressource introuvable ──────────────────────────────────────────
   @ExceptionHandler(ResourceNotFoundException.class)
   public ResponseEntity<ApiError> handleNotFound(
       ResourceNotFoundException ex, HttpServletRequest request) {
@@ -23,7 +22,6 @@ public class GlobalExceptionHandler {
     return build(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI(), null);
   }
 
-  // ── 409 — doublon ────────────────────────────────────────────────────────
   @ExceptionHandler(DuplicateResourceException.class)
   public ResponseEntity<ApiError> handleDuplicate(
       DuplicateResourceException ex, HttpServletRequest request) {
@@ -31,7 +29,6 @@ public class GlobalExceptionHandler {
     return build(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI(), null);
   }
 
-  // ── 400 — erreurs de validation (@Valid) ─────────────────────────────────
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ApiError> handleValidation(
       MethodArgumentNotValidException ex, HttpServletRequest request) {
@@ -54,7 +51,6 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiError);
   }
 
-  // ── 400 — mauvais type de paramètre (ex: UUID malformé dans l'URL) ───────
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
   public ResponseEntity<ApiError> handleTypeMismatch(
       MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
@@ -63,7 +59,6 @@ public class GlobalExceptionHandler {
     return build(HttpStatus.BAD_REQUEST, message, request.getRequestURI(), null);
   }
 
-  // ── 500 — erreur inattendue ───────────────────────────────────────────────
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiError> handleGeneric(Exception ex, HttpServletRequest request) {
 
@@ -74,7 +69,6 @@ public class GlobalExceptionHandler {
         null);
   }
 
-  // ── Helper ────────────────────────────────────────────────────────────────
   private ResponseEntity<ApiError> build(
       HttpStatus status, String message, String path, Map<String, String> validationErrors) {
 
