@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import com.example.demo.librairie.dto.GenreRequest;
 import com.example.demo.librairie.dto.GenreResponse;
+import com.example.demo.librairie.dto.GenreRevenueResponse;
 import com.example.demo.librairie.entity.Genre;
 import com.example.demo.librairie.repository.GenreRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -148,5 +149,29 @@ class GenreServiceTest {
     assertThrows(EntityNotFoundException.class, () -> genreService.delete(genreId));
     verify(genreRepository, times(1)).existsById(genreId);
     verify(genreRepository, never()).deleteById(genreId);
+  }
+
+  @Test
+  void getRevenue() {
+    when(genreRepository.findById(genreId)).thenReturn(Optional.of(genre));
+    when(genreRepository.getRevenueByGenreId(genreId)).thenReturn(5000.00);
+
+    GenreRevenueResponse result = genreService.getRevenue(genreId);
+
+    assertNotNull(result);
+    assertEquals(genreId, result.getGenreId());
+    assertEquals(genre.getName(), result.getGenreName());
+    assertEquals(5000.00, result.getTotalRevenue());
+    verify(genreRepository, times(1)).findById(genreId);
+    verify(genreRepository, times(1)).getRevenueByGenreId(genreId);
+  }
+
+  @Test
+  void getRevenue_ShouldThrowException_WhenNotFound() {
+    when(genreRepository.findById(genreId)).thenReturn(Optional.empty());
+
+    assertThrows(EntityNotFoundException.class, () -> genreService.getRevenue(genreId));
+    verify(genreRepository, times(1)).findById(genreId);
+    verify(genreRepository, never()).getRevenueByGenreId(any());
   }
 }
