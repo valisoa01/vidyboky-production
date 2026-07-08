@@ -45,7 +45,7 @@ class AuthorServiceTest {
 
     authorRequest = new AuthorRequest();
     authorRequest.setFullName("John Doe");
-    authorRequest.setFirstname("John");
+    authorRequest.setFirstname("Johns");
     authorRequest.setLastname("Doe");
     authorRequest.setBirthDate(LocalDate.of(1990, 1, 1));
   }

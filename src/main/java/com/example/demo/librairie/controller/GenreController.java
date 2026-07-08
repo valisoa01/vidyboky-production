@@ -2,6 +2,7 @@ package com.example.demo.librairie.controller;
 
 import com.example.demo.librairie.dto.GenreRequest;
 import com.example.demo.librairie.dto.GenreResponse;
+import com.example.demo.librairie.dto.GenreRevenueResponse;
 import com.example.demo.librairie.service.GenreService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -47,5 +48,14 @@ public class GenreController {
   public ResponseEntity<Void> delete(@PathVariable UUID id) {
     genreService.delete(id);
     return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/{id}/revenue")
+  public ResponseEntity<GenreRevenueResponse> getRevenue(@PathVariable UUID id) {
+    try {
+      return ResponseEntity.ok(genreService.getRevenue(id));
+    } catch (RuntimeException e) {
+      return ResponseEntity.notFound().build();
+    }
   }
 }
