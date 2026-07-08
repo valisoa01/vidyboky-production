@@ -2,6 +2,7 @@ package com.example.demo.librairie.service;
 
 import com.example.demo.librairie.dto.GenreRequest;
 import com.example.demo.librairie.dto.GenreResponse;
+import com.example.demo.librairie.dto.GenreRevenueResponse;
 import com.example.demo.librairie.entity.Genre;
 import com.example.demo.librairie.repository.GenreRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -62,6 +63,21 @@ public class GenreService {
       throw new EntityNotFoundException("Genre not found with id: " + id);
     }
     genreRepository.deleteById(id);
+  }
+
+  public GenreRevenueResponse getRevenue(UUID id) {
+    Genre genre =
+        genreRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Genre not found with id: " + id));
+
+    Double totalRevenue = genreRepository.getRevenueByGenreId(id);
+
+    return GenreRevenueResponse.builder()
+        .genreId(genre.getId())
+        .genreName(genre.getName())
+        .totalRevenue(totalRevenue)
+        .build();
   }
 
   private GenreResponse toResponse(Genre genre) {
