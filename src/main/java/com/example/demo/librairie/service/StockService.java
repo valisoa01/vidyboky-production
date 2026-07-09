@@ -1,5 +1,6 @@
 package com.example.demo.librairie.service;
 
+import com.example.demo.librairie.dto.BookStockResponse;
 import com.example.demo.librairie.dto.StockRequest;
 import com.example.demo.librairie.dto.StockResponse;
 import com.example.demo.librairie.entity.BookFormat;
@@ -67,6 +68,22 @@ public class StockService {
               }
             })
         .sum();
+  }
+
+  @Transactional(readOnly = true)
+  public List<BookStockResponse> getStocksByBook(UUID bookId) {
+
+    List<BookFormat> bookFormats = bookFormatRepository.findByBookId(bookId);
+
+    return bookFormats.stream()
+        .map(
+            bookFormat ->
+                BookStockResponse.builder()
+                    .bookFormatId(bookFormat.getId())
+                    .formatType(bookFormat.getFormat().getFormatType())
+                    .currentStock(getCurrentStock(bookFormat.getId()))
+                    .build())
+        .collect(Collectors.toList());
   }
 
   @Transactional

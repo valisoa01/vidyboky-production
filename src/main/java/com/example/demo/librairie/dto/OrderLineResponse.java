@@ -1,7 +1,11 @@
 package com.example.demo.librairie.dto;
 
 import java.util.UUID;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -9,12 +13,12 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class OrderLineResponse {
-
   private UUID id;
+  private UUID orderId;
   private UUID bookFormatId;
   private String bookTitle;
   private String formatType;
   private Integer quantity;
   private Double unitPrice;
-  private Double lineTotal;
+  private Double totalPrice;
 }

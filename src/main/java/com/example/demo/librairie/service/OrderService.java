@@ -125,7 +125,7 @@ public class OrderService {
                         .formatType(line.getBookFormat().getFormat().getFormatType())
                         .quantity(line.getQuantity())
                         .unitPrice(line.getUnitPrice())
-                        .lineTotal(line.getUnitPrice() * line.getQuantity())
+                        .totalPrice(line.getUnitPrice() * line.getQuantity())
                         .build())
             .collect(Collectors.toList());
 
@@ -195,7 +195,7 @@ public class OrderService {
             ? List.of()
             : order.getLines().stream().map(this::toLineResponse).toList();
 
-    double totalAmount = lineResponses.stream().mapToDouble(OrderLineResponse::getLineTotal).sum();
+    double totalAmount = lineResponses.stream().mapToDouble(OrderLineResponse::getTotalPrice).sum();
 
     return OrderResponse.builder()
         .id(order.getId())
@@ -216,7 +216,7 @@ public class OrderService {
         .formatType(line.getBookFormat().getFormat().getFormatType())
         .quantity(line.getQuantity())
         .unitPrice(line.getUnitPrice())
-        .lineTotal(line.getUnitPrice() * line.getQuantity())
+        .totalPrice(line.getUnitPrice() * line.getQuantity())
         .build();
   }
 }
