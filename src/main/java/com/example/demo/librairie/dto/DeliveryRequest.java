@@ -15,18 +15,18 @@ import lombok.*;
 @Builder
 public class DeliveryRequest {
 
-    @NotBlank(message = "Address is required")
-    @Size(max = 255)
-    private String address;
+  @NotBlank(message = "Address is required")
+  @Size(max = 255)
+  private String address;
 
-    @NotNull(message = "Status is required")
-    private DeliveryStatus status;
+  @NotNull(message = "Status is required")
+  private DeliveryStatus status;
 
-    @NotNull(message = "Expected delivery date is required")
-    private LocalDate expectedDate;
+  @NotNull(message = "Expected delivery date is required")
+  private LocalDate expectedDate;
 
-    private LocalDate effectiveDate;
+  private LocalDate effectiveDate;
 
-    @NotNull(message = "Order id is required")
-    private UUID orderId;
+  @NotNull(message = "Order id is required")
+  private UUID orderId;
 }

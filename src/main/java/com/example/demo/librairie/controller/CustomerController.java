@@ -3,10 +3,9 @@ package com.example.demo.librairie.controller;
 import com.example.demo.librairie.dto.CustomerRequest;
 import com.example.demo.librairie.dto.CustomerResponse;
 import com.example.demo.librairie.service.CustomerService;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
-
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +36,8 @@ public class CustomerController {
   }
 
   @PutMapping("/{id}")
-  public CustomerResponse update(@PathVariable UUID id, @Valid @RequestBody CustomerRequest request) {
+  public CustomerResponse update(
+      @PathVariable UUID id, @Valid @RequestBody CustomerRequest request) {
     return customerService.update(id, request);
   }
 

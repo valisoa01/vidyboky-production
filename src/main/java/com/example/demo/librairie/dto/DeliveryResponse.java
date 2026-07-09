@@ -12,10 +12,10 @@ import lombok.*;
 @Builder
 public class DeliveryResponse {
 
-    private UUID id;
-    private String address;
-    private DeliveryStatus status;
-    private LocalDate expectedDate;
-    private LocalDate effectiveDate;
-    private UUID orderId;
+  private UUID id;
+  private String address;
+  private DeliveryStatus status;
+  private LocalDate expectedDate;
+  private LocalDate effectiveDate;
+  private UUID orderId;
 }
