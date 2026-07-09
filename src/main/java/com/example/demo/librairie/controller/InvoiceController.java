@@ -14,16 +14,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class InvoiceController {
 
-    private final InvoiceService invoiceService;
+  private final InvoiceService invoiceService;
 
-    @GetMapping("/orders/{orderId}/invoice")
-    public ResponseEntity<InvoiceResponse> getInvoice(@PathVariable UUID orderId) {
-        return ResponseEntity.ok(invoiceService.getOrCreateDownloadLink(orderId));
-    }
+  @GetMapping("/orders/{orderId}/invoice")
+  public ResponseEntity<InvoiceResponse> getInvoice(@PathVariable UUID orderId) {
+    return ResponseEntity.ok(invoiceService.getOrCreateDownloadLink(orderId));
+  }
 
-    @GetMapping("/customers/{customerId}/invoices")
-    public ResponseEntity<List<InvoiceResponse>> getCustomerInvoices(
-            @PathVariable UUID customerId) {
-        return ResponseEntity.ok(invoiceService.listByCustomer(customerId));
-    }
+  @GetMapping("/customers/{customerId}/invoices")
+  public ResponseEntity<List<InvoiceResponse>> getCustomerInvoices(@PathVariable UUID customerId) {
+    return ResponseEntity.ok(invoiceService.listByCustomer(customerId));
+  }
 }

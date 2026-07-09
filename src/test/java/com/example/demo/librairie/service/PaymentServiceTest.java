@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.example.demo.endpoint.event.EventProducer;
 import com.example.demo.librairie.dto.PaymentRequest;
 import com.example.demo.librairie.dto.PaymentResponse;
 import com.example.demo.librairie.entity.Order;
@@ -22,7 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import com.example.demo.endpoint.event.EventProducer;
+
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceTest {
 
@@ -113,21 +114,22 @@ class PaymentServiceTest {
     verify(paymentRepository, times(1)).findByOrderId(orderId);
   }
 
-    @Test
-    void create() {
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+  @Test
+  void create() {
+    when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+    when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
 
-        PaymentResponse result = paymentService.create(paymentRequest);
+    PaymentResponse result = paymentService.create(paymentRequest);
 
-        assertNotNull(result);
-        assertEquals(paymentRequest.getAmount(), result.getAmount());
-        assertEquals(paymentRequest.getPaymentType(), result.getPaymentType());
-        assertEquals(orderId, result.getOrderId());
-        verify(orderRepository, times(1)).findById(orderId);
-        verify(paymentRepository, times(1)).save(any(Payment.class));
-        verify(eventProducer, times(1)).accept(any(List.class));   // ← ajouté
-    }
+    assertNotNull(result);
+    assertEquals(paymentRequest.getAmount(), result.getAmount());
+    assertEquals(paymentRequest.getPaymentType(), result.getPaymentType());
+    assertEquals(orderId, result.getOrderId());
+    verify(orderRepository, times(1)).findById(orderId);
+    verify(paymentRepository, times(1)).save(any(Payment.class));
+    verify(eventProducer, times(1)).accept(any(List.class)); // ← ajouté
+  }
+
   @Test
   void create_ShouldThrowException_WhenOrderNotFound() {
     when(orderRepository.findById(orderId)).thenReturn(Optional.empty());

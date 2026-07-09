@@ -45,31 +45,32 @@ public class PaymentService {
     return toResponse(payment);
   }
 
-    public PaymentResponse create(PaymentRequest request) {
-        Order order =
-                orderRepository
-                        .findById(request.getOrderId())
-                        .orElseThrow(
-                                () ->
-                                        new EntityNotFoundException(
-                                                "Order not found with id: " + request.getOrderId()));
+  public PaymentResponse create(PaymentRequest request) {
+    Order order =
+        orderRepository
+            .findById(request.getOrderId())
+            .orElseThrow(
+                () ->
+                    new EntityNotFoundException(
+                        "Order not found with id: " + request.getOrderId()));
 
-        Payment payment =
-                Payment.builder()
-                        .paymentType(request.getPaymentType())
-                        .amount(request.getAmount())
-                        .paymentDate(
-                                request.getPaymentDate() != null ? request.getPaymentDate() : LocalDateTime.now())
-                        .order(order)
-                        .build();
+    Payment payment =
+        Payment.builder()
+            .paymentType(request.getPaymentType())
+            .amount(request.getAmount())
+            .paymentDate(
+                request.getPaymentDate() != null ? request.getPaymentDate() : LocalDateTime.now())
+            .order(order)
+            .build();
 
-        Payment savedPayment = paymentRepository.save(payment);
+    Payment savedPayment = paymentRepository.save(payment);
 
-        eventProducer.accept(
-                List.of(InvoiceRequested.builder().orderId(order.getId().toString()).build()));
+    eventProducer.accept(
+        List.of(InvoiceRequested.builder().orderId(order.getId().toString()).build()));
 
-        return toResponse(savedPayment);
-    }
+    return toResponse(savedPayment);
+  }
+
   public void delete(UUID id) {
     if (!paymentRepository.existsById(id)) {
       throw new EntityNotFoundException("Payment not found with id: " + id);

@@ -14,17 +14,17 @@ import lombok.*;
 @Builder
 public class Invoice {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false, unique = true)
-    private Order order;
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "order_id", nullable = false, unique = true)
+  private Order order;
 
-    @Column(name = "bucket_key", length = 255, nullable = false)
-    private String bucketKey;
+  @Column(name = "bucket_key", length = 255, nullable = false)
+  private String bucketKey;
 
-    @Column(name = "generation_date", nullable = false)
-    private LocalDateTime generationDate;
+  @Column(name = "generation_date", nullable = false)
+  private LocalDateTime generationDate;
 }

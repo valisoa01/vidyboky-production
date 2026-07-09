@@ -20,56 +20,60 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class InvoiceService {
 
-    private static final Duration LINK_EXPIRATION = Duration.ofMinutes(15);
-    private static final String BUCKET_PREFIX = "invoices/";
+  private static final Duration LINK_EXPIRATION = Duration.ofMinutes(15);
+  private static final String BUCKET_PREFIX = "invoices/";
 
-    private final InvoiceRepository invoiceRepository;
-    private final OrderRepository orderRepository;
-    private final InvoicePdfGenerator pdfGenerator;
-    private final BucketComponent bucketComponent;
+  private final InvoiceRepository invoiceRepository;
+  private final OrderRepository orderRepository;
+  private final InvoicePdfGenerator pdfGenerator;
+  private final BucketComponent bucketComponent;
 
-    public InvoiceResponse getOrCreateDownloadLink(UUID orderId) {
-        Invoice invoice = generateAndStore(orderId);
-        return toResponse(invoice);
-    }
+  public InvoiceResponse getOrCreateDownloadLink(UUID orderId) {
+    Invoice invoice = generateAndStore(orderId);
+    return toResponse(invoice);
+  }
 
-    public Invoice generateAndStore(UUID orderId) {
-        return invoiceRepository.findByOrderId(orderId).orElseGet(() -> createInvoice(orderId));
-    }
+  public Invoice generateAndStore(UUID orderId) {
+    return invoiceRepository.findByOrderId(orderId).orElseGet(() -> createInvoice(orderId));
+  }
 
-    public List<InvoiceResponse> listByCustomer(UUID customerId) {
-        return invoiceRepository.findByOrder_Customer_IdOrderByGenerationDateDesc(customerId).stream()
-                .map(this::toResponse)
-                .toList();
-    }
+  public List<InvoiceResponse> listByCustomer(UUID customerId) {
+    return invoiceRepository.findByOrder_Customer_IdOrderByGenerationDateDesc(customerId).stream()
+        .map(this::toResponse)
+        .toList();
+  }
 
-    private Invoice createInvoice(UUID orderId) {
-        Order order =
-                orderRepository
-                        .findDetailedById(orderId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+  private Invoice createInvoice(UUID orderId) {
+    Order order =
+        orderRepository
+            .findDetailedById(orderId)
+            .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
 
-        log.info("Generating invoice PDF for order {}", orderId);
-        var pdfFile = pdfGenerator.generate(order);
+    log.info("Generating invoice PDF for order {}", orderId);
+    var pdfFile = pdfGenerator.generate(order);
 
-        var bucketKey = BUCKET_PREFIX + orderId + ".pdf";
-        bucketComponent.upload(pdfFile, bucketKey);
-        log.info("Invoice PDF for order {} uploaded to bucket key {}", orderId, bucketKey);
+    var bucketKey = BUCKET_PREFIX + orderId + ".pdf";
+    bucketComponent.upload(pdfFile, bucketKey);
+    log.info("Invoice PDF for order {} uploaded to bucket key {}", orderId, bucketKey);
 
-        var invoice =
-                Invoice.builder().order(order).bucketKey(bucketKey).generationDate(LocalDateTime.now()).build();
+    var invoice =
+        Invoice.builder()
+            .order(order)
+            .bucketKey(bucketKey)
+            .generationDate(LocalDateTime.now())
+            .build();
 
-        return invoiceRepository.save(invoice);
-    }
+    return invoiceRepository.save(invoice);
+  }
 
-    private InvoiceResponse toResponse(Invoice invoice) {
-        var downloadUrl = bucketComponent.presign(invoice.getBucketKey(), LINK_EXPIRATION);
-        return InvoiceResponse.builder()
-                .id(invoice.getId())
-                .orderId(invoice.getOrder().getId())
-                .generationDate(invoice.getGenerationDate())
-                .downloadUrl(downloadUrl.toString())
-                .expiresInSeconds(LINK_EXPIRATION.toSeconds())
-                .build();
-    }
+  private InvoiceResponse toResponse(Invoice invoice) {
+    var downloadUrl = bucketComponent.presign(invoice.getBucketKey(), LINK_EXPIRATION);
+    return InvoiceResponse.builder()
+        .id(invoice.getId())
+        .orderId(invoice.getOrder().getId())
+        .generationDate(invoice.getGenerationDate())
+        .downloadUrl(downloadUrl.toString())
+        .expiresInSeconds(LINK_EXPIRATION.toSeconds())
+        .build();
+  }
 }

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
 
-    Optional<Invoice> findByOrderId(UUID orderId);
+  Optional<Invoice> findByOrderId(UUID orderId);
 
-    List<Invoice> findByOrder_Customer_IdOrderByGenerationDateDesc(UUID customerId);
+  List<Invoice> findByOrder_Customer_IdOrderByGenerationDateDesc(UUID customerId);
 }

@@ -10,15 +10,15 @@ import lombok.*;
 @EqualsAndHashCode(callSuper = false)
 @ToString
 public class InvoiceRequested extends PojaEvent {
-    private String orderId;
+  private String orderId;
 
-    @Override
-    public Duration maxConsumerDuration() {
-        return Duration.ofSeconds(60);
-    }
+  @Override
+  public Duration maxConsumerDuration() {
+    return Duration.ofSeconds(60);
+  }
 
-    @Override
-    public Duration maxConsumerBackoffBetweenRetries() {
-        return Duration.ofSeconds(30);
-    }
+  @Override
+  public Duration maxConsumerBackoffBetweenRetries() {
+    return Duration.ofSeconds(30);
+  }
 }
