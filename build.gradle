@@ -20,8 +20,6 @@ jacoco {
 
 
 repositories {
-mavenCentral
-
     mavenCentral()
 }
 
@@ -145,13 +143,13 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok:1.18.30'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
 
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
     implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
     implementation 'io.swagger:swagger-annotations:1.6.12'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.2'
     testImplementation 'org.testcontainers:testcontainers-junit-jupiter:2.0.2'
     testImplementation 'org.junit-pioneer:junit-pioneer:2.2.0'
-
-
-
 }
+
