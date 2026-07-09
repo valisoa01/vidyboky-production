@@ -4,12 +4,11 @@ import com.example.demo.endpoint.event.model.SendEmailRequested;
 import com.example.demo.mail.Email;
 import com.example.demo.mail.Mailer;
 import jakarta.mail.internet.InternetAddress;
+import java.util.List;
+import java.util.function.Consumer;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.function.Consumer;
 
 @Service
 @AllArgsConstructor

@@ -1,16 +1,14 @@
 package com.example.demo.librairie.controller;
 
-
 import com.example.demo.mail.Email;
 import com.example.demo.mail.Mailer;
 import jakarta.mail.internet.InternetAddress;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @AllArgsConstructor

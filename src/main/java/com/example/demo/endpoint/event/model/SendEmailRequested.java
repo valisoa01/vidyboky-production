@@ -1,8 +1,7 @@
 package com.example.demo.endpoint.event.model;
 
-import lombok.*;
-
 import java.time.Duration;
+import lombok.*;
 
 @NoArgsConstructor
 @AllArgsConstructor
