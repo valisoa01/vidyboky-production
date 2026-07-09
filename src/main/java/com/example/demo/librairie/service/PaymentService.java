@@ -1,7 +1,5 @@
 package com.example.demo.librairie.service;
 
-import com.example.demo.endpoint.event.EventProducer;
-import com.example.demo.endpoint.event.model.InvoiceRequested;
 import com.example.demo.librairie.dto.PaymentRequest;
 import com.example.demo.librairie.dto.PaymentResponse;
 import com.example.demo.librairie.entity.Order;
@@ -19,7 +17,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
-  private final EventProducer eventProducer;
+
   private final PaymentRepository paymentRepository;
   private final OrderRepository orderRepository;
 
@@ -62,12 +60,7 @@ public class PaymentService {
             .order(order)
             .build();
 
-    Payment savedPayment = paymentRepository.save(payment);
-
-    eventProducer.accept(
-        List.of(InvoiceRequested.builder().orderId(order.getId().toString()).build()));
-
-    return toResponse(savedPayment);
+    return toResponse(paymentRepository.save(payment));
   }
 
   public void delete(UUID id) {

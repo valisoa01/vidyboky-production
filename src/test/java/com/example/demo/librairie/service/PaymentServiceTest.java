@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.example.demo.endpoint.event.EventProducer;
 import com.example.demo.librairie.dto.PaymentRequest;
 import com.example.demo.librairie.dto.PaymentResponse;
 import com.example.demo.librairie.entity.Order;
@@ -28,7 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class PaymentServiceTest {
 
   @Mock private PaymentRepository paymentRepository;
-  @Mock private EventProducer eventProducer;
+
   @Mock private OrderRepository orderRepository;
 
   @InjectMocks private PaymentService paymentService;
@@ -127,7 +126,6 @@ class PaymentServiceTest {
     assertEquals(orderId, result.getOrderId());
     verify(orderRepository, times(1)).findById(orderId);
     verify(paymentRepository, times(1)).save(any(Payment.class));
-    verify(eventProducer, times(1)).accept(any(List.class));
   }
 
   @Test
