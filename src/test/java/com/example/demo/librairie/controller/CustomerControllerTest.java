@@ -81,20 +81,22 @@ class CustomerControllerTest {
 
     CustomerRequest request =
         CustomerRequest.builder()
-            .firstName("John")
-            .name("Doe")
-            .email("john@mail.com")
-            .phone("123456")
-            .build();
+                .firstName("Ndrina")
+                .name("Rakotobe")
+                .email("ndrina@mail.com")
+                .phone("0321456987")
+                .build();
+
 
     CustomerResponse response =
         CustomerResponse.builder()
             .id(UUID.randomUUID())
-            .firstName("John")
-            .name("Doe")
-            .email("john@mail.com")
-            .phone("123456")
-            .build();
+                .firstName("Ndrina")
+                .name("Rakotobe")
+                .email("ndrina@mail.com")
+                .phone("0321456987")
+                .build();
+
 
     when(customerService.create(any(CustomerRequest.class))).thenReturn(response);
 
@@ -114,19 +116,19 @@ class CustomerControllerTest {
 
     CustomerRequest request =
         CustomerRequest.builder()
-            .firstName("John")
-            .name("Doe")
-            .email("john@mail.com")
-            .phone("123456")
+            .firstName("Ndrina")
+            .name("Rakoto")
+            .email("ndrina@mail.com")
+            .phone("0321456987")
             .build();
 
     CustomerResponse response =
         CustomerResponse.builder()
             .id(id)
-            .firstName("John")
-            .name("Doe")
-            .email("john@mail.com")
-            .phone("123456")
+            .firstName("Ndrina")
+            .name("Rakoto")
+            .email("ndrina@mail.com")
+            .phone("0321456987")
             .build();
 
     when(customerService.update(eq(id), any(CustomerRequest.class))).thenReturn(response);
