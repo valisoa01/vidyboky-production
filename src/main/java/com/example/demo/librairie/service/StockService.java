@@ -69,28 +69,22 @@ public class StockService {
             })
         .sum();
   }
-    @Transactional(readOnly = true)
-    public List<BookStockResponse> getStocksByBook(UUID bookId) {
 
-        List<BookFormat> bookFormats =
-                bookFormatRepository.findByBookId(bookId);
+  @Transactional(readOnly = true)
+  public List<BookStockResponse> getStocksByBook(UUID bookId) {
 
+    List<BookFormat> bookFormats = bookFormatRepository.findByBookId(bookId);
 
-        return bookFormats.stream()
-                .map(
-                        bookFormat ->
-                                BookStockResponse.builder()
-                                        .bookFormatId(bookFormat.getId())
-                                        .formatType(
-                                                bookFormat.getFormat().getFormatType()
-                                        )
-                                        .currentStock(
-                                                getCurrentStock(bookFormat.getId())
-                                        )
-                                        .build()
-                )
-                .collect(Collectors.toList());
-    }
+    return bookFormats.stream()
+        .map(
+            bookFormat ->
+                BookStockResponse.builder()
+                    .bookFormatId(bookFormat.getId())
+                    .formatType(bookFormat.getFormat().getFormatType())
+                    .currentStock(getCurrentStock(bookFormat.getId()))
+                    .build())
+        .collect(Collectors.toList());
+  }
 
   @Transactional
   public StockResponse create(StockRequest request) {

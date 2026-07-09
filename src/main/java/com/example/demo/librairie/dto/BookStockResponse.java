@@ -1,8 +1,7 @@
 package com.example.demo.librairie.dto;
 
-import lombok.*;
-
 import java.util.UUID;
+import lombok.*;
 
 @Builder
 @Getter
@@ -11,7 +10,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class BookStockResponse {
 
-    private UUID bookFormatId;
-    private String formatType;
-    private Integer currentStock;
+  private UUID bookFormatId;
+  private String formatType;
+  private Integer currentStock;
 }

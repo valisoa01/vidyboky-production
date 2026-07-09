@@ -71,10 +71,10 @@ public class StockController {
     Map<String, Integer> summary = stockService.getStockSummary();
     return ResponseEntity.ok(summary);
   }
-    @GetMapping("/book/{bookId}/stocks")
-    public List<BookStockResponse> getStocksByBook(
-            @PathVariable UUID bookId) {
 
-        return stockService.getStocksByBook(bookId);
-    }
+  @GetMapping("/book/{bookId}/stocks")
+  public List<BookStockResponse> getStocksByBook(@PathVariable UUID bookId) {
+
+    return stockService.getStocksByBook(bookId);
+  }
 }
