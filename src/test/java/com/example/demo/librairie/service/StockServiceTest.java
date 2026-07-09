@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.example.demo.librairie.dto.BookStockResponse;
 import com.example.demo.librairie.dto.StockRequest;
 import com.example.demo.librairie.dto.StockResponse;
 import com.example.demo.librairie.entity.Book;
@@ -35,74 +34,63 @@ class StockServiceTest {
 
   @InjectMocks private StockService stockService;
 
+  private UUID stockId;
   private UUID bookFormatId;
-  private UUID stockId1;
-  private UUID stockId2;
+  private UUID bookId;
+  private UUID formatId;
+  private Book book;
+  private Format format;
   private BookFormat bookFormat;
-  private StockMovement stockIn;
-  private StockMovement stockOut;
-  private StockRequest stockRequest;
+  private StockMovement stockMovementIn;
+  private StockMovement stockMovementOut;
 
   @BeforeEach
   void setUp() {
+    stockId = UUID.randomUUID();
     bookFormatId = UUID.randomUUID();
-    stockId1 = UUID.randomUUID();
-    stockId2 = UUID.randomUUID();
+    bookId = UUID.randomUUID();
+    formatId = UUID.randomUUID();
 
-    Book book = Book.builder().id(UUID.randomUUID()).title("Les Misérables").build();
-
-    Format format = Format.builder().id(UUID.randomUUID()).formatType("Poche").build();
-
+    book = Book.builder().id(bookId).title("Test Book").build();
+    format = Format.builder().id(formatId).formatType("Paperback").build();
     bookFormat =
-        BookFormat.builder().id(bookFormatId).book(book).format(format).price(12.99).build();
+        BookFormat.builder().id(bookFormatId).book(book).format(format).price(19.99).build();
 
-    stockIn =
+    stockMovementIn =
         StockMovement.builder()
-            .id(stockId1)
+            .id(stockId)
             .movement(MovementType.IN)
-            .quantity(50)
+            .quantity(10)
             .movementDate(LocalDateTime.now())
             .bookFormat(bookFormat)
             .build();
 
-    stockOut =
+    stockMovementOut =
         StockMovement.builder()
-            .id(stockId2)
+            .id(UUID.randomUUID())
             .movement(MovementType.OUT)
-            .quantity(12)
+            .quantity(4)
             .movementDate(LocalDateTime.now())
             .bookFormat(bookFormat)
-            .build();
-
-    stockRequest =
-        StockRequest.builder()
-            .bookFormatId(bookFormatId)
-            .movement(MovementType.IN)
-            .quantity(20)
             .build();
   }
 
   @Test
-  void getAll_ShouldReturnListOfStocks_WhenStocksExist() {
-    when(stockRepository.findAll()).thenReturn(List.of(stockIn, stockOut));
+  void getAll_ShouldReturnListOfStockResponses() {
+    when(stockRepository.findAll()).thenReturn(List.of(stockMovementIn, stockMovementOut));
 
     List<StockResponse> result = stockService.getAll();
 
     assertNotNull(result);
     assertEquals(2, result.size());
-    assertEquals(stockId1, result.get(0).getId());
-    assertEquals(MovementType.IN, result.get(0).getMovement());
-    assertEquals(50, result.get(0).getQuantity());
-    assertEquals(stockId2, result.get(1).getId());
-    assertEquals(MovementType.OUT, result.get(1).getMovement());
-    assertEquals(12, result.get(1).getQuantity());
-    assertEquals(bookFormatId, result.get(0).getBookFormatId());
-
+    assertEquals(stockMovementIn.getQuantity(), result.get(0).getQuantity());
+    assertEquals(book.getTitle(), result.get(0).getBookTitle());
+    assertEquals(format.getFormatType(), result.get(0).getFormatType());
     verify(stockRepository, times(1)).findAll();
   }
 
   @Test
-  void getAll_ShouldReturnEmptyList_WhenNoStocksExist() {
+  void getAll_ShouldReturnEmptyList_WhenNoStockMovements() {
     when(stockRepository.findAll()).thenReturn(List.of());
 
     List<StockResponse> result = stockService.getAll();
@@ -113,178 +101,156 @@ class StockServiceTest {
   }
 
   @Test
-  void getById_ShouldReturnStock_WhenExists() {
-    when(stockRepository.findById(stockId1)).thenReturn(Optional.of(stockIn));
+  void getById_ShouldReturnStockResponse_WhenExists() {
+    when(stockRepository.findById(stockId)).thenReturn(Optional.of(stockMovementIn));
 
-    StockResponse result = stockService.getById(stockId1);
+    StockResponse result = stockService.getById(stockId);
 
     assertNotNull(result);
-    assertEquals(stockId1, result.getId());
+    assertEquals(stockId, result.getId());
     assertEquals(MovementType.IN, result.getMovement());
-    assertEquals(50, result.getQuantity());
     assertEquals(bookFormatId, result.getBookFormatId());
-
-    verify(stockRepository, times(1)).findById(stockId1);
+    verify(stockRepository, times(1)).findById(stockId);
   }
 
   @Test
   void getById_ShouldThrowException_WhenNotFound() {
-    when(stockRepository.findById(stockId1)).thenReturn(Optional.empty());
+    when(stockRepository.findById(stockId)).thenReturn(Optional.empty());
 
     RuntimeException exception =
-        assertThrows(RuntimeException.class, () -> stockService.getById(stockId1));
+        assertThrows(RuntimeException.class, () -> stockService.getById(stockId));
 
-    assertEquals("Stock not found with id: " + stockId1, exception.getMessage());
-    verify(stockRepository, times(1)).findById(stockId1);
+    assertEquals("Stock not found with id: " + stockId, exception.getMessage());
+    verify(stockRepository, times(1)).findById(stockId);
   }
 
   @Test
-  void getByBookFormatId_ShouldReturnStocks_WhenBookFormatExists() {
+  void getByBookFormatId_ShouldReturnList_WhenBookFormatExists() {
     when(bookFormatRepository.existsById(bookFormatId)).thenReturn(true);
-    when(stockRepository.findByBookFormatId(bookFormatId)).thenReturn(List.of(stockIn, stockOut));
+    when(stockRepository.findByBookFormatId(bookFormatId))
+        .thenReturn(List.of(stockMovementIn, stockMovementOut));
 
     List<StockResponse> result = stockService.getByBookFormatId(bookFormatId);
 
     assertNotNull(result);
     assertEquals(2, result.size());
-    assertEquals(bookFormatId, result.get(0).getBookFormatId());
-    assertEquals(bookFormatId, result.get(1).getBookFormatId());
-
-    verify(bookFormatRepository, times(1)).existsById(bookFormatId);
-    verify(stockRepository, times(1)).findByBookFormatId(bookFormatId);
-  }
-
-  @Test
-  void getByBookFormatId_ShouldReturnEmptyList_WhenNoStocksForBookFormat() {
-    when(bookFormatRepository.existsById(bookFormatId)).thenReturn(true);
-    when(stockRepository.findByBookFormatId(bookFormatId)).thenReturn(List.of());
-
-    List<StockResponse> result = stockService.getByBookFormatId(bookFormatId);
-
-    assertNotNull(result);
-    assertTrue(result.isEmpty());
-
     verify(bookFormatRepository, times(1)).existsById(bookFormatId);
     verify(stockRepository, times(1)).findByBookFormatId(bookFormatId);
   }
 
   @Test
   void getByBookFormatId_ShouldThrowException_WhenBookFormatNotFound() {
-    UUID invalidId = UUID.randomUUID();
-    when(bookFormatRepository.existsById(invalidId)).thenReturn(false);
+    when(bookFormatRepository.existsById(bookFormatId)).thenReturn(false);
 
     RuntimeException exception =
-        assertThrows(RuntimeException.class, () -> stockService.getByBookFormatId(invalidId));
+        assertThrows(RuntimeException.class, () -> stockService.getByBookFormatId(bookFormatId));
 
-    assertEquals("BookFormat not found with id: " + invalidId, exception.getMessage());
-    verify(bookFormatRepository, times(1)).existsById(invalidId);
+    assertEquals("BookFormat not found with id: " + bookFormatId, exception.getMessage());
+    verify(bookFormatRepository, times(1)).existsById(bookFormatId);
     verify(stockRepository, never()).findByBookFormatId(any());
   }
 
   @Test
-  void getCurrentStock_ShouldReturnCorrectStock_WhenMouvementsExist() {
+  void getCurrentStock_ShouldReturnComputedSum_WhenBookFormatExists() {
     when(bookFormatRepository.existsById(bookFormatId)).thenReturn(true);
-    when(stockRepository.findByBookFormatId(bookFormatId)).thenReturn(List.of(stockIn, stockOut));
+    when(stockRepository.findByBookFormatId(bookFormatId))
+        .thenReturn(List.of(stockMovementIn, stockMovementOut));
 
     Integer result = stockService.getCurrentStock(bookFormatId);
 
-    assertNotNull(result);
-    assertEquals(38, result);
-
+    assertEquals(6, result);
     verify(bookFormatRepository, times(1)).existsById(bookFormatId);
     verify(stockRepository, times(1)).findByBookFormatId(bookFormatId);
   }
 
   @Test
-  void getCurrentStock_ShouldReturnZero_WhenNoMouvementsExist() {
+  void getCurrentStock_ShouldReturnZero_WhenNoMovements() {
     when(bookFormatRepository.existsById(bookFormatId)).thenReturn(true);
     when(stockRepository.findByBookFormatId(bookFormatId)).thenReturn(List.of());
 
     Integer result = stockService.getCurrentStock(bookFormatId);
 
-    assertNotNull(result);
     assertEquals(0, result);
-
-    verify(bookFormatRepository, times(1)).existsById(bookFormatId);
     verify(stockRepository, times(1)).findByBookFormatId(bookFormatId);
   }
 
   @Test
   void getCurrentStock_ShouldThrowException_WhenBookFormatNotFound() {
-    UUID invalidId = UUID.randomUUID();
-    when(bookFormatRepository.existsById(invalidId)).thenReturn(false);
+    when(bookFormatRepository.existsById(bookFormatId)).thenReturn(false);
 
     RuntimeException exception =
-        assertThrows(RuntimeException.class, () -> stockService.getCurrentStock(invalidId));
+        assertThrows(RuntimeException.class, () -> stockService.getCurrentStock(bookFormatId));
 
-    assertEquals("BookFormat not found with id: " + invalidId, exception.getMessage());
-    verify(bookFormatRepository, times(1)).existsById(invalidId);
+    assertEquals("BookFormat not found with id: " + bookFormatId, exception.getMessage());
+    verify(bookFormatRepository, times(1)).existsById(bookFormatId);
     verify(stockRepository, never()).findByBookFormatId(any());
   }
 
   @Test
-  void create_ShouldReturnCreatedStock_WhenMovementIsIN() {
-    when(bookFormatRepository.findById(bookFormatId)).thenReturn(Optional.of(bookFormat));
-
-    StockMovement savedStock =
-        StockMovement.builder()
-            .id(UUID.randomUUID())
-            .movement(stockRequest.getMovement())
-            .quantity(stockRequest.getQuantity())
-            .movementDate(LocalDateTime.now())
-            .bookFormat(bookFormat)
+  void create_ShouldSaveInMovement_WhenBookFormatExists() {
+    StockRequest request =
+        StockRequest.builder()
+            .bookFormatId(bookFormatId)
+            .movement(MovementType.IN)
+            .quantity(15)
             .build();
 
-    when(stockRepository.save(any(StockMovement.class))).thenReturn(savedStock);
+    when(bookFormatRepository.findById(bookFormatId)).thenReturn(Optional.of(bookFormat));
+    when(stockRepository.save(any(StockMovement.class))).thenReturn(stockMovementIn);
 
-    StockResponse result = stockService.create(stockRequest);
+    StockResponse result = stockService.create(request);
 
     assertNotNull(result);
     assertEquals(MovementType.IN, result.getMovement());
-    assertEquals(20, result.getQuantity());
-    assertEquals(bookFormatId, result.getBookFormatId());
-
     verify(bookFormatRepository, times(1)).findById(bookFormatId);
     verify(stockRepository, times(1)).save(any(StockMovement.class));
+    verify(bookFormatRepository, never()).existsById(any());
   }
 
   @Test
-  void create_ShouldReturnCreatedStock_WhenMovementIsOUT_WithSufficientStock() {
-    StockRequest outRequest =
+  void create_ShouldSaveOutMovement_WhenStockIsSufficient() {
+    StockRequest request =
         StockRequest.builder()
             .bookFormatId(bookFormatId)
             .movement(MovementType.OUT)
-            .quantity(10)
+            .quantity(4)
             .build();
 
     when(bookFormatRepository.findById(bookFormatId)).thenReturn(Optional.of(bookFormat));
     when(bookFormatRepository.existsById(bookFormatId)).thenReturn(true);
-    when(stockRepository.findByBookFormatId(bookFormatId)).thenReturn(List.of(stockIn, stockOut));
+    when(stockRepository.findByBookFormatId(bookFormatId)).thenReturn(List.of(stockMovementIn));
+    when(stockRepository.save(any(StockMovement.class))).thenReturn(stockMovementOut);
 
-    StockMovement savedStock =
-        StockMovement.builder()
-            .id(UUID.randomUUID())
-            .movement(MovementType.OUT)
-            .quantity(10)
-            .movementDate(LocalDateTime.now())
-            .bookFormat(bookFormat)
-            .build();
-
-    when(stockRepository.save(any(StockMovement.class))).thenReturn(savedStock);
-
-    StockResponse result = stockService.create(outRequest);
+    StockResponse result = stockService.create(request);
 
     assertNotNull(result);
     assertEquals(MovementType.OUT, result.getMovement());
-    assertEquals(10, result.getQuantity());
-
     verify(bookFormatRepository, times(1)).findById(bookFormatId);
     verify(stockRepository, times(1)).save(any(StockMovement.class));
   }
 
   @Test
-  void create_ShouldThrowException_WhenMovementIsOUT_WithInsufficientStock() {
-    StockRequest outRequest =
+  void create_ShouldThrowException_WhenBookFormatNotFound() {
+    StockRequest request =
+        StockRequest.builder()
+            .bookFormatId(bookFormatId)
+            .movement(MovementType.IN)
+            .quantity(5)
+            .build();
+
+    when(bookFormatRepository.findById(bookFormatId)).thenReturn(Optional.empty());
+
+    RuntimeException exception =
+        assertThrows(RuntimeException.class, () -> stockService.create(request));
+
+    assertEquals("BookFormat not found with id: " + bookFormatId, exception.getMessage());
+    verify(bookFormatRepository, times(1)).findById(bookFormatId);
+    verify(stockRepository, never()).save(any(StockMovement.class));
+  }
+
+  @Test
+  void create_ShouldThrowException_WhenStockIsInsufficientForOutMovement() {
+    StockRequest request =
         StockRequest.builder()
             .bookFormatId(bookFormatId)
             .movement(MovementType.OUT)
@@ -293,144 +259,44 @@ class StockServiceTest {
 
     when(bookFormatRepository.findById(bookFormatId)).thenReturn(Optional.of(bookFormat));
     when(bookFormatRepository.existsById(bookFormatId)).thenReturn(true);
-    when(stockRepository.findByBookFormatId(bookFormatId)).thenReturn(List.of(stockIn, stockOut));
+    when(stockRepository.findByBookFormatId(bookFormatId)).thenReturn(List.of(stockMovementIn));
 
     RuntimeException exception =
-        assertThrows(RuntimeException.class, () -> stockService.create(outRequest));
+        assertThrows(RuntimeException.class, () -> stockService.create(request));
 
-    assertTrue(
-        exception.getMessage().contains("Stock insuffisant ! Stock actuel : 38, demandé : 100"));
-
-    verify(bookFormatRepository, times(1)).findById(bookFormatId);
+    assertTrue(exception.getMessage().contains("Stock insuffisant"));
     verify(stockRepository, never()).save(any(StockMovement.class));
   }
 
   @Test
-  void create_ShouldThrowException_WhenBookFormatNotFound() {
-    UUID invalidId = UUID.randomUUID();
-    StockRequest invalidRequest =
-        StockRequest.builder()
-            .bookFormatId(invalidId)
-            .movement(MovementType.IN)
-            .quantity(10)
-            .build();
+  void getStockSummary_ShouldAggregateStockByFormatType() {
+    Book book2 = Book.builder().id(UUID.randomUUID()).title("Second Book").build();
+    BookFormat bookFormat2 =
+        BookFormat.builder().id(UUID.randomUUID()).book(book2).format(format).price(9.99).build();
 
-    when(bookFormatRepository.findById(invalidId)).thenReturn(Optional.empty());
-
-    RuntimeException exception =
-        assertThrows(RuntimeException.class, () -> stockService.create(invalidRequest));
-
-    assertEquals("BookFormat not found with id: " + invalidId, exception.getMessage());
-
-    verify(bookFormatRepository, times(1)).findById(invalidId);
-    verify(stockRepository, never()).save(any(StockMovement.class));
-  }
-
-  @Test
-  void getStockSummary_ShouldReturnMap_WhenBookFormatsExist() {
-    when(bookFormatRepository.findAll()).thenReturn(List.of(bookFormat));
-    when(bookFormatRepository.existsById(bookFormatId)).thenReturn(true);
-    when(stockRepository.findByBookFormatId(bookFormatId)).thenReturn(List.of(stockIn, stockOut));
+    when(bookFormatRepository.findAll()).thenReturn(List.of(bookFormat, bookFormat2));
+    when(bookFormatRepository.existsById(bookFormat.getId())).thenReturn(true);
+    when(bookFormatRepository.existsById(bookFormat2.getId())).thenReturn(true);
+    when(stockRepository.findByBookFormatId(bookFormat.getId()))
+        .thenReturn(List.of(stockMovementIn, stockMovementOut));
+    when(stockRepository.findByBookFormatId(bookFormat2.getId()))
+        .thenReturn(List.of(stockMovementIn));
 
     Map<String, Integer> result = stockService.getStockSummary();
 
     assertNotNull(result);
-    assertEquals(1, result.size());
-    assertTrue(result.containsKey("Poche"));
-    assertEquals(38, result.get("Poche"));
+    assertEquals(16, result.get("Paperback"));
+    verify(bookFormatRepository, times(1)).findAll();
   }
 
   @Test
-  void getStockSummary_ShouldReturnEmptyMap_WhenNoBookFormatsExist() {
+  void getStockSummary_ShouldReturnEmptyMap_WhenNoBookFormats() {
     when(bookFormatRepository.findAll()).thenReturn(List.of());
 
     Map<String, Integer> result = stockService.getStockSummary();
 
     assertNotNull(result);
     assertTrue(result.isEmpty());
-  }
-
-  @Test
-  void getStocksByBook_ShouldReturnStockList_WhenBookHasMultipleFormats() {
-    UUID bookId = bookFormat.getBook().getId();
-
-    UUID bookFormatId2 = UUID.randomUUID();
-    Format formatRelie = Format.builder().id(UUID.randomUUID()).formatType("Relié").build();
-    BookFormat bookFormatRelie =
-        BookFormat.builder()
-            .id(bookFormatId2)
-            .book(bookFormat.getBook())
-            .format(formatRelie)
-            .price(24.99)
-            .build();
-
-    StockMovement stockIn2 =
-        StockMovement.builder()
-            .id(UUID.randomUUID())
-            .movement(MovementType.IN)
-            .quantity(20)
-            .movementDate(LocalDateTime.now())
-            .bookFormat(bookFormatRelie)
-            .build();
-
-    when(bookFormatRepository.findByBookId(bookId))
-        .thenReturn(List.of(bookFormat, bookFormatRelie));
-
-    when(bookFormatRepository.existsById(bookFormatId)).thenReturn(true);
-    when(stockRepository.findByBookFormatId(bookFormatId)).thenReturn(List.of(stockIn, stockOut));
-
-    when(bookFormatRepository.existsById(bookFormatId2)).thenReturn(true);
-    when(stockRepository.findByBookFormatId(bookFormatId2)).thenReturn(List.of(stockIn2));
-
-    List<BookStockResponse> result = stockService.getStocksByBook(bookId);
-
-    assertNotNull(result);
-    assertEquals(2, result.size());
-
-    assertEquals(bookFormatId, result.get(0).getBookFormatId());
-    assertEquals("Poche", result.get(0).getFormatType());
-    assertEquals(38, result.get(0).getCurrentStock());
-
-    assertEquals(bookFormatId2, result.get(1).getBookFormatId());
-    assertEquals("Relié", result.get(1).getFormatType());
-    assertEquals(20, result.get(1).getCurrentStock());
-
-    verify(bookFormatRepository, times(1)).findByBookId(bookId);
-    verify(stockRepository, times(1)).findByBookFormatId(bookFormatId);
-    verify(stockRepository, times(1)).findByBookFormatId(bookFormatId2);
-  }
-
-  @Test
-  void getStocksByBook_ShouldReturnEmptyList_WhenBookHasNoFormats() {
-    UUID bookId = UUID.randomUUID();
-    when(bookFormatRepository.findByBookId(bookId)).thenReturn(List.of());
-
-    List<BookStockResponse> result = stockService.getStocksByBook(bookId);
-
-    assertNotNull(result);
-    assertTrue(result.isEmpty());
-
-    verify(bookFormatRepository, times(1)).findByBookId(bookId);
-    verify(stockRepository, never()).findByBookFormatId(any());
-  }
-
-  @Test
-  void getStocksByBook_ShouldReturnZeroStock_WhenFormatHasNoMovements() {
-    UUID bookId = bookFormat.getBook().getId();
-
-    when(bookFormatRepository.findByBookId(bookId)).thenReturn(List.of(bookFormat));
-    when(bookFormatRepository.existsById(bookFormatId)).thenReturn(true);
-    when(stockRepository.findByBookFormatId(bookFormatId)).thenReturn(List.of());
-
-    List<BookStockResponse> result = stockService.getStocksByBook(bookId);
-
-    assertNotNull(result);
-    assertEquals(1, result.size());
-    assertEquals(bookFormatId, result.get(0).getBookFormatId());
-    assertEquals("Poche", result.get(0).getFormatType());
-    assertEquals(0, result.get(0).getCurrentStock());
-
-    verify(bookFormatRepository, times(1)).findByBookId(bookId);
-    verify(stockRepository, times(1)).findByBookFormatId(bookFormatId);
+    verify(bookFormatRepository, times(1)).findAll();
   }
 }

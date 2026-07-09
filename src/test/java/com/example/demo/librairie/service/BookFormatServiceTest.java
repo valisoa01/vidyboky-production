@@ -9,6 +9,8 @@ import com.example.demo.librairie.dto.BookFormatResponseDTO;
 import com.example.demo.librairie.entity.Book;
 import com.example.demo.librairie.entity.BookFormat;
 import com.example.demo.librairie.entity.Format;
+import com.example.demo.librairie.exception.DuplicateResourceException;
+import com.example.demo.librairie.exception.ResourceNotFoundException;
 import com.example.demo.librairie.repository.BookFormatRepository;
 import com.example.demo.librairie.repository.BookRepository;
 import com.example.demo.librairie.repository.FormatRepository;
@@ -84,10 +86,10 @@ class BookFormatServiceTest {
   void create_ShouldThrowException_WhenBookNotFound() {
     when(bookRepository.findById(bookId)).thenReturn(Optional.empty());
 
-    RuntimeException exception =
-        assertThrows(RuntimeException.class, () -> bookFormatService.create(request));
+    ResourceNotFoundException exception =
+        assertThrows(ResourceNotFoundException.class, () -> bookFormatService.create(request));
 
-    assertEquals("Book not found", exception.getMessage());
+    assertEquals("Book not found with id: " + bookId, exception.getMessage());
     verify(bookRepository, times(1)).findById(bookId);
     verify(formatRepository, never()).findById(any());
     verify(bookFormatRepository, never()).existsByBookIdAndFormatId(any(), any());
@@ -99,10 +101,10 @@ class BookFormatServiceTest {
     when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
     when(formatRepository.findById(formatId)).thenReturn(Optional.empty());
 
-    RuntimeException exception =
-        assertThrows(RuntimeException.class, () -> bookFormatService.create(request));
+    ResourceNotFoundException exception =
+        assertThrows(ResourceNotFoundException.class, () -> bookFormatService.create(request));
 
-    assertEquals("Format not found", exception.getMessage());
+    assertEquals("Format not found with id: " + formatId, exception.getMessage());
     verify(bookRepository, times(1)).findById(bookId);
     verify(formatRepository, times(1)).findById(formatId);
     verify(bookFormatRepository, never()).existsByBookIdAndFormatId(any(), any());
@@ -115,10 +117,12 @@ class BookFormatServiceTest {
     when(formatRepository.findById(formatId)).thenReturn(Optional.of(format));
     when(bookFormatRepository.existsByBookIdAndFormatId(bookId, formatId)).thenReturn(true);
 
-    RuntimeException exception =
-        assertThrows(RuntimeException.class, () -> bookFormatService.create(request));
+    DuplicateResourceException exception =
+        assertThrows(DuplicateResourceException.class, () -> bookFormatService.create(request));
 
-    assertEquals("This book already has this format", exception.getMessage());
+    assertEquals(
+        "BookFormat already exists with bookId and formatId: " + bookId + ", " + formatId,
+        exception.getMessage());
     verify(bookRepository, times(1)).findById(bookId);
     verify(formatRepository, times(1)).findById(formatId);
     verify(bookFormatRepository, times(1)).existsByBookIdAndFormatId(bookId, formatId);
@@ -167,10 +171,11 @@ class BookFormatServiceTest {
   void findById_ShouldThrowException_WhenNotFound() {
     when(bookFormatRepository.findById(bookFormatId)).thenReturn(Optional.empty());
 
-    RuntimeException exception =
-        assertThrows(RuntimeException.class, () -> bookFormatService.findById(bookFormatId));
+    ResourceNotFoundException exception =
+        assertThrows(
+            ResourceNotFoundException.class, () -> bookFormatService.findById(bookFormatId));
 
-    assertEquals("BookFormat not found", exception.getMessage());
+    assertEquals("BookFormat not found with id: " + bookFormatId, exception.getMessage());
     verify(bookFormatRepository, times(1)).findById(bookFormatId);
   }
 
@@ -201,10 +206,11 @@ class BookFormatServiceTest {
   void update_ShouldThrowException_WhenBookFormatNotFound() {
     when(bookFormatRepository.findById(bookFormatId)).thenReturn(Optional.empty());
 
-    RuntimeException exception =
-        assertThrows(RuntimeException.class, () -> bookFormatService.update(bookFormatId, request));
+    ResourceNotFoundException exception =
+        assertThrows(
+            ResourceNotFoundException.class, () -> bookFormatService.update(bookFormatId, request));
 
-    assertEquals("BookFormat not found", exception.getMessage());
+    assertEquals("BookFormat not found with id: " + bookFormatId, exception.getMessage());
     verify(bookFormatRepository, times(1)).findById(bookFormatId);
     verify(bookRepository, never()).findById(any());
     verify(formatRepository, never()).findById(any());
@@ -216,10 +222,11 @@ class BookFormatServiceTest {
     when(bookFormatRepository.findById(bookFormatId)).thenReturn(Optional.of(bookFormat));
     when(bookRepository.findById(bookId)).thenReturn(Optional.empty());
 
-    RuntimeException exception =
-        assertThrows(RuntimeException.class, () -> bookFormatService.update(bookFormatId, request));
+    ResourceNotFoundException exception =
+        assertThrows(
+            ResourceNotFoundException.class, () -> bookFormatService.update(bookFormatId, request));
 
-    assertEquals("Book not found", exception.getMessage());
+    assertEquals("Book not found with id: " + bookId, exception.getMessage());
     verify(bookFormatRepository, times(1)).findById(bookFormatId);
     verify(bookRepository, times(1)).findById(bookId);
     verify(formatRepository, never()).findById(any());
@@ -232,10 +239,11 @@ class BookFormatServiceTest {
     when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
     when(formatRepository.findById(formatId)).thenReturn(Optional.empty());
 
-    RuntimeException exception =
-        assertThrows(RuntimeException.class, () -> bookFormatService.update(bookFormatId, request));
+    ResourceNotFoundException exception =
+        assertThrows(
+            ResourceNotFoundException.class, () -> bookFormatService.update(bookFormatId, request));
 
-    assertEquals("Format not found", exception.getMessage());
+    assertEquals("Format not found with id: " + formatId, exception.getMessage());
     verify(bookFormatRepository, times(1)).findById(bookFormatId);
     verify(bookRepository, times(1)).findById(bookId);
     verify(formatRepository, times(1)).findById(formatId);
@@ -255,10 +263,10 @@ class BookFormatServiceTest {
   void delete_ShouldThrowException_WhenNotFound() {
     when(bookFormatRepository.existsById(bookFormatId)).thenReturn(false);
 
-    RuntimeException exception =
-        assertThrows(RuntimeException.class, () -> bookFormatService.delete(bookFormatId));
+    ResourceNotFoundException exception =
+        assertThrows(ResourceNotFoundException.class, () -> bookFormatService.delete(bookFormatId));
 
-    assertEquals("BookFormat not found", exception.getMessage());
+    assertEquals("BookFormat not found with id: " + bookFormatId, exception.getMessage());
     verify(bookFormatRepository, times(1)).existsById(bookFormatId);
     verify(bookFormatRepository, never()).deleteById(bookFormatId);
   }

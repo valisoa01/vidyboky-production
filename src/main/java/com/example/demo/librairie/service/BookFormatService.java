@@ -5,6 +5,8 @@ import com.example.demo.librairie.dto.BookFormatResponseDTO;
 import com.example.demo.librairie.entity.Book;
 import com.example.demo.librairie.entity.BookFormat;
 import com.example.demo.librairie.entity.Format;
+import com.example.demo.librairie.exception.DuplicateResourceException;
+import com.example.demo.librairie.exception.ResourceNotFoundException;
 import com.example.demo.librairie.repository.BookFormatRepository;
 import com.example.demo.librairie.repository.BookRepository;
 import com.example.demo.librairie.repository.FormatRepository;
@@ -29,16 +31,21 @@ public class BookFormatService {
     Book book =
         bookRepository
             .findById(request.getBookId())
-            .orElseThrow(() -> new RuntimeException("Book not found"));
+            .orElseThrow(
+                () -> new ResourceNotFoundException("Book", "id", request.getBookId().toString()));
 
     Format format =
         formatRepository
             .findById(request.getFormatId())
-            .orElseThrow(() -> new RuntimeException("Format not found"));
+            .orElseThrow(
+                () ->
+                    new ResourceNotFoundException(
+                        "Format", "id", request.getFormatId().toString()));
 
     if (bookFormatRepository.existsByBookIdAndFormatId(
         request.getBookId(), request.getFormatId())) {
-      throw new RuntimeException("This book already has this format");
+      throw new DuplicateResourceException(
+          "BookFormat", "bookId and formatId", request.getBookId() + ", " + request.getFormatId());
     }
 
     BookFormat bookFormat =
@@ -59,7 +66,7 @@ public class BookFormatService {
     BookFormat bookFormat =
         bookFormatRepository
             .findById(id)
-            .orElseThrow(() -> new RuntimeException("BookFormat not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("BookFormat", "id", id.toString()));
     return toResponseDTO(bookFormat);
   }
 
@@ -69,17 +76,21 @@ public class BookFormatService {
     BookFormat bookFormat =
         bookFormatRepository
             .findById(id)
-            .orElseThrow(() -> new RuntimeException("BookFormat not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("BookFormat", "id", id.toString()));
 
     Book book =
         bookRepository
             .findById(request.getBookId())
-            .orElseThrow(() -> new RuntimeException("Book not found"));
+            .orElseThrow(
+                () -> new ResourceNotFoundException("Book", "id", request.getBookId().toString()));
 
     Format format =
         formatRepository
             .findById(request.getFormatId())
-            .orElseThrow(() -> new RuntimeException("Format not found"));
+            .orElseThrow(
+                () ->
+                    new ResourceNotFoundException(
+                        "Format", "id", request.getFormatId().toString()));
 
     bookFormat.setPrice(request.getPrice());
     bookFormat.setBook(book);
@@ -91,7 +102,7 @@ public class BookFormatService {
   @Transactional
   public void delete(UUID id) {
     if (!bookFormatRepository.existsById(id)) {
-      throw new RuntimeException("BookFormat not found");
+      throw new ResourceNotFoundException("BookFormat", "id", id.toString());
     }
     bookFormatRepository.deleteById(id);
   }
