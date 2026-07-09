@@ -1,5 +1,6 @@
 package com.example.demo.librairie.service;
 
+import com.example.demo.librairie.dto.DeliveryRequest;
 import com.example.demo.librairie.dto.DeliveryResponse;
 import com.example.demo.librairie.entity.Delivery;
 import com.example.demo.librairie.entity.Order;
@@ -10,6 +11,8 @@ import com.example.demo.librairie.repository.DeliveryRepository;
 import com.example.demo.librairie.repository.OrderRepository;
 import java.util.List;
 import java.util.UUID;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +36,7 @@ public class DeliveryService {
         return toResponse(delivery);
     }
 
-    public DeliveryResponse create(DeliveryResponse request) {
+    public DeliveryResponse create(@Valid DeliveryRequest request) {
 
         Order order =
                 orderRepository
@@ -64,7 +67,7 @@ public class DeliveryService {
         return toResponse(deliveryRepository.save(delivery));
     }
 
-    public DeliveryResponse update(UUID id, DeliveryResponse request) {
+    public DeliveryResponse update(UUID id, @Valid DeliveryRequest request) {
 
         Delivery delivery =
                 deliveryRepository
