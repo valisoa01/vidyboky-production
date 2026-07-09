@@ -14,19 +14,19 @@ import lombok.Setter;
 @Builder
 public class OrderLineResponse {
 
-    private UUID id;
+  private UUID id;
 
-    private UUID orderId;
+  private UUID orderId;
 
-    private UUID bookFormatId;
+  private UUID bookFormatId;
 
-    private String bookTitle;
+  private String bookTitle;
 
-    private String formatType;
+  private String formatType;
 
-    private Integer quantity;
+  private Integer quantity;
 
-    private Double unitPrice;
+  private Double unitPrice;
 
-    private Double totalPrice;
+  private Double totalPrice;
 }

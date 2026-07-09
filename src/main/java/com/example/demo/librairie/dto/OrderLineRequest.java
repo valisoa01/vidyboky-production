@@ -16,13 +16,9 @@ import lombok.Setter;
 @Builder
 public class OrderLineRequest {
 
-    @NotNull
-    private UUID orderId;
+  @NotNull private UUID orderId;
 
-    @NotNull
-    private UUID bookFormatId;
+  @NotNull private UUID bookFormatId;
 
-    @NotNull
-    @Positive
-    private Integer quantity;
+  @NotNull @Positive private Integer quantity;
 }
