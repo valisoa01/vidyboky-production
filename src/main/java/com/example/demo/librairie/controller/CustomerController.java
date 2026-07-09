@@ -5,6 +5,8 @@ import com.example.demo.librairie.dto.CustomerResponse;
 import com.example.demo.librairie.service.CustomerService;
 import java.util.List;
 import java.util.UUID;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,16 +31,14 @@ public class CustomerController {
   }
 
   @PostMapping
-  public ResponseEntity<CustomerResponse> createCustomer(@RequestBody CustomerRequest request) {
-    CustomerResponse created = customerService.create(request);
-    return ResponseEntity.status(HttpStatus.CREATED).body(created);
+  @ResponseStatus(HttpStatus.CREATED)
+  public CustomerResponse create(@Valid @RequestBody CustomerRequest request) {
+    return customerService.create(request);
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<CustomerResponse> updateCustomer(
-      @PathVariable UUID id, @RequestBody CustomerRequest request) {
-    CustomerResponse updated = customerService.update(id, request);
-    return ResponseEntity.ok(updated);
+  public CustomerResponse update(@PathVariable UUID id, @Valid @RequestBody CustomerRequest request) {
+    return customerService.update(id, request);
   }
 
   @DeleteMapping("/{id}")
