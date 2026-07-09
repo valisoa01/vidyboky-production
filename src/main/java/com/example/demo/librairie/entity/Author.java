@@ -11,7 +11,6 @@ import lombok.*;
 @Table(name = "author")
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Author {
