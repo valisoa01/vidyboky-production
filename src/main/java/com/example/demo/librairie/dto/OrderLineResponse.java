@@ -15,18 +15,11 @@ import lombok.Setter;
 public class OrderLineResponse {
 
   private UUID id;
-
   private UUID orderId;
-
   private UUID bookFormatId;
-
   private String bookTitle;
-
   private String formatType;
-
   private Integer quantity;
-
   private Double unitPrice;
-
   private Double totalPrice;
 }
