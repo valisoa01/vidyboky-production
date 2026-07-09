@@ -1,0 +1,1904 @@
+openapi: 3.0.3
+info:
+  title: Vidy-Boky API
+  description: |
+    API REST complète pour la gestion d'une librairie.
+    Couvre le catalogue de livres, formats d'édition, stocks, commandes, paiements et livraisons.
+  version: 1.0.0
+  contact:
+    name: Équipe vidy-boky
+    url: https://github.com/ChristianMDG/vidyboky-production
+
+servers:
+  - url: http://localhost:8080
+    description: Développement local
+  - url: https://vidy-boky-preprod.onrender.com
+    description: Pré-production
+  - url: https://vidy-boky-prod.onrender.com
+    description: Production
+
+tags:
+  - name: Author
+    description: Gestion des auteurs
+  - name: Book
+    description: Gestion des livres
+  - name: Format
+    description: Gestion des formats d'édition
+  - name: BookFormat
+    description: Association livre + format avec prix
+  - name: Genre
+    description: Gestion des genres littéraires
+  - name: Customer
+    description: Gestion des clients
+  - name: Order
+    description: Gestion des commandes
+  - name: OrderLine
+    description: Lignes de commande
+  - name: Payment
+    description: Gestion des paiements
+  - name: Delivery
+    description: Gestion des livraisons
+  - name: Stock
+    description: Gestion des stocks par BookFormat
+
+paths:
+
+  # ─── AUTHOR ────────────────────────────────────────────────────────────────
+
+  /authors:
+    get:
+      tags: [Author]
+      summary: Liste tous les auteurs
+      operationId: getAllAuthors
+      responses:
+        '200':
+          description: Liste des auteurs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuthorResponse'
+    post:
+      tags: [Author]
+      summary: Créer un auteur
+      operationId: createAuthor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorRequest'
+            example:
+              fullName: Victor Hugo
+              firstname: Victor
+              lastname: Hugo
+              birthDate: '1802-02-26'
+      responses:
+        '201':
+          description: Auteur créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /authors/{id}:
+    parameters:
+      - $ref: '#/components/parameters/UUIDPath'
+    get:
+      tags: [Author]
+      summary: Récupérer un auteur par ID
+      operationId: getAuthorById
+      responses:
+        '200':
+          description: Auteur trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Author]
+      summary: Modifier un auteur
+      operationId: updateAuthor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorRequest'
+      responses:
+        '200':
+          description: Auteur mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Author]
+      summary: Supprimer un auteur
+      operationId: deleteAuthor
+      responses:
+        '204':
+          description: Auteur supprimé
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ─── BOOK ──────────────────────────────────────────────────────────────────
+
+  /books:
+    get:
+      tags: [Book]
+      summary: Liste tous les livres
+      operationId: getAllBooks
+      responses:
+        '200':
+          description: Liste des livres
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookResponse'
+    post:
+      tags: [Book]
+      summary: Créer un livre
+      operationId: createBook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookRequest'
+            example:
+              title: Les Misérables
+              isbn: '978-2-07-040850-4'
+              description: Roman historique de Victor Hugo
+              url: https://example.com/les-miserables
+              publicationDate: '1862-04-03'
+              authorIds:
+                - 3fa85f64-5717-4562-b3fc-2c963f66afa6
+              genreIds:
+                - 4fa85f64-5717-4562-b3fc-2c963f66afa7
+      responses:
+        '201':
+          description: Livre créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          description: Author ou Genre introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /books/{id}:
+    parameters:
+      - $ref: '#/components/parameters/UUIDPath'
+    get:
+      tags: [Book]
+      summary: Récupérer un livre par ID
+      operationId: getBookById
+      responses:
+        '200':
+          description: Livre trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Book]
+      summary: Modifier un livre
+      operationId: updateBook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookRequest'
+      responses:
+        '200':
+          description: Livre mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Book]
+      summary: Supprimer un livre
+      operationId: deleteBook
+      responses:
+        '204':
+          description: Livre supprimé
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /books/searchByTitle:
+    get:
+      tags: [Book]
+      summary: Rechercher des livres par titre
+      operationId: searchBooksByTitle
+      parameters:
+        - name: title
+          in: query
+          required: true
+          schema:
+            type: string
+          example: Misérables
+      responses:
+        '200':
+          description: Livres correspondants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookResponse'
+
+  /books/search/gender/{genreId}:
+    get:
+      tags: [Book]
+      summary: Rechercher des livres par genre
+      operationId: searchBooksByGenre
+      parameters:
+        - name: genreId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Livres du genre
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /books/searchByDate:
+    get:
+      tags: [Book]
+      summary: Rechercher des livres par date de publication
+      operationId: searchBooksByDate
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          example: '1862-04-03'
+      responses:
+        '200':
+          description: Livres publiés à cette date
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookResponse'
+
+  # ─── FORMAT ────────────────────────────────────────────────────────────────
+
+  /formats:
+    get:
+      tags: [Format]
+      summary: Liste tous les formats
+      operationId: getAllFormats
+      responses:
+        '200':
+          description: Liste des formats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FormatResponse'
+    post:
+      tags: [Format]
+      summary: Créer un format
+      operationId: createFormat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FormatRequest'
+            example:
+              formatType: Broché
+      responses:
+        '201':
+          description: Format créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FormatResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /formats/{id}:
+    parameters:
+      - $ref: '#/components/parameters/UUIDPath'
+    get:
+      tags: [Format]
+      summary: Récupérer un format par ID
+      operationId: getFormatById
+      responses:
+        '200':
+          description: Format trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FormatResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Format]
+      summary: Modifier un format
+      operationId: updateFormat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FormatRequest'
+      responses:
+        '200':
+          description: Format mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FormatResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Format]
+      summary: Supprimer un format
+      operationId: deleteFormat
+      responses:
+        '204':
+          description: Format supprimé
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ─── BOOKFORMAT ────────────────────────────────────────────────────────────
+
+  /book-formats:
+    get:
+      tags: [BookFormat]
+      summary: Liste tous les BookFormats
+      operationId: getAllBookFormats
+      responses:
+        '200':
+          description: Liste des BookFormats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookFormatResponse'
+    post:
+      tags: [BookFormat]
+      summary: Créer un BookFormat
+      operationId: createBookFormat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookFormatRequest'
+            example:
+              price: 15.00
+              bookId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+              formatId: 4fa85f64-5717-4562-b3fc-2c963f66afa7
+      responses:
+        '201':
+          description: BookFormat créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookFormatResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /book-formats/{id}:
+    parameters:
+      - $ref: '#/components/parameters/UUIDPath'
+    get:
+      tags: [BookFormat]
+      summary: Récupérer un BookFormat par ID
+      operationId: getBookFormatById
+      responses:
+        '200':
+          description: BookFormat trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookFormatResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [BookFormat]
+      summary: Modifier un BookFormat
+      operationId: updateBookFormat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookFormatRequest'
+      responses:
+        '200':
+          description: BookFormat mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookFormatResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [BookFormat]
+      summary: Supprimer un BookFormat
+      operationId: deleteBookFormat
+      responses:
+        '204':
+          description: BookFormat supprimé
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /book-formats/book/{bookId}:
+    get:
+      tags: [BookFormat]
+      summary: Tous les formats d'un livre
+      operationId: getBookFormatsByBook
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Formats du livre
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookFormatResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ─── GENRE ─────────────────────────────────────────────────────────────────
+
+  /genres:
+    get:
+      tags: [Genre]
+      summary: Liste tous les genres
+      operationId: getAllGenres
+      responses:
+        '200':
+          description: Liste des genres
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GenreResponse'
+    post:
+      tags: [Genre]
+      summary: Créer un genre
+      operationId: createGenre
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenreRequest'
+            example:
+              name: Romance
+              description: Livres de romance et d'amour
+      responses:
+        '201':
+          description: Genre créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenreResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /genres/{id}:
+    parameters:
+      - $ref: '#/components/parameters/UUIDPath'
+    get:
+      tags: [Genre]
+      summary: Récupérer un genre par ID
+      operationId: getGenreById
+      responses:
+        '200':
+          description: Genre trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenreResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Genre]
+      summary: Modifier un genre
+      operationId: updateGenre
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenreRequest'
+      responses:
+        '200':
+          description: Genre mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenreResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Genre]
+      summary: Supprimer un genre
+      operationId: deleteGenre
+      responses:
+        '204':
+          description: Genre supprimé
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /genres/{id}/revenue:
+    get:
+      tags: [Genre]
+      summary: Chiffre d'affaires généré par un genre
+      description: |
+        Calcule le total des ventes (quantity × unitPrice des OrderLines)
+        pour tous les livres appartenant à ce genre.
+
+        **Exemple :**
+        - Romance : 730 000 ar
+        - Education : 60 000 ar
+      operationId: getGenreRevenue
+      parameters:
+        - $ref: '#/components/parameters/UUIDPath'
+      responses:
+        '200':
+          description: Chiffre d'affaires du genre
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenreRevenueResponse'
+              example:
+                genreId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                genreName: Romance
+                totalRevenue: 730000.00
+                totalQuantitySold: 146
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ─── CUSTOMER ──────────────────────────────────────────────────────────────
+
+  /customers:
+    get:
+      tags: [Customer]
+      summary: Liste tous les clients
+      operationId: getAllCustomers
+      responses:
+        '200':
+          description: Liste des clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerResponse'
+    post:
+      tags: [Customer]
+      summary: Créer un client
+      operationId: createCustomer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+            example:
+              name: Rakoto
+              firstname: Jean
+              email: jean.rakoto@example.com
+      responses:
+        '201':
+          description: Client créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /customers/{id}:
+    parameters:
+      - $ref: '#/components/parameters/UUIDPath'
+    get:
+      tags: [Customer]
+      summary: Récupérer un client par ID
+      operationId: getCustomerById
+      responses:
+        '200':
+          description: Client trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Customer]
+      summary: Modifier un client
+      operationId: updateCustomer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+      responses:
+        '200':
+          description: Client mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Customer]
+      summary: Supprimer un client
+      operationId: deleteCustomer
+      responses:
+        '204':
+          description: Client supprimé
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ─── ORDER ─────────────────────────────────────────────────────────────────
+
+  /orders:
+    get:
+      tags: [Order]
+      summary: Liste toutes les commandes
+      operationId: getAllOrders
+      responses:
+        '200':
+          description: Liste des commandes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderResponse'
+    post:
+      tags: [Order]
+      summary: Créer une commande
+      description: |
+        Crée une commande avec validation du stock pour chaque ligne.
+
+        **Règle :** Si le stock d'un seul BookFormat est insuffisant,
+        toute la commande est rejetée avec une erreur 400.
+
+        En cas de succès, le stock est automatiquement décrémenté
+        (mouvement OUT enregistré pour chaque ligne).
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+            example:
+              customerId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+              orderType: DELIVERY
+              lines:
+                - bookFormatId: 4fa85f64-5717-4562-b3fc-2c963f66afa7
+                  quantity: 2
+      responses:
+        '201':
+          description: Commande créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: Stock insuffisant ou validation échouée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                timestamp: '2026-07-09T10:00:00'
+                status: 400
+                error: Bad Request
+                message: "Insufficient stock for: Les Misérables (Broché) — available: 3, requested: 10"
+                path: /orders
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /orders/{id}:
+    parameters:
+      - $ref: '#/components/parameters/UUIDPath'
+    get:
+      tags: [Order]
+      summary: Récupérer une commande par ID
+      operationId: getOrderById
+      responses:
+        '200':
+          description: Commande trouvée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Order]
+      summary: Modifier une commande
+      operationId: updateOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      responses:
+        '200':
+          description: Commande mise à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Order]
+      summary: Supprimer une commande
+      operationId: deleteOrder
+      responses:
+        '204':
+          description: Commande supprimée
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /orders/customer/{customerId}:
+    get:
+      tags: [Order]
+      summary: Commandes d'un client
+      operationId: getOrdersByCustomer
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Commandes du client
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ─── ORDER LINE ────────────────────────────────────────────────────────────
+
+  /order-lines/{id}:
+    parameters:
+      - $ref: '#/components/parameters/UUIDPath'
+    get:
+      tags: [OrderLine]
+      summary: Récupérer une ligne par ID
+      operationId: getOrderLineById
+      responses:
+        '200':
+          description: Ligne trouvée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderLineResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [OrderLine]
+      summary: Modifier une ligne de commande
+      operationId: updateOrderLine
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderLineRequest'
+      responses:
+        '200':
+          description: Ligne mise à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderLineResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [OrderLine]
+      summary: Supprimer une ligne de commande
+      operationId: deleteOrderLine
+      responses:
+        '204':
+          description: Ligne supprimée
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /order-lines/order/{orderId}:
+    get:
+      tags: [OrderLine]
+      summary: Lignes d'une commande
+      operationId: getOrderLinesByOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Lignes de la commande
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderLineResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /order-lines:
+    post:
+      tags: [OrderLine]
+      summary: Créer une ligne de commande
+      operationId: createOrderLine
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderLineRequest'
+      responses:
+        '201':
+          description: Ligne créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderLineResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ─── PAYMENT ───────────────────────────────────────────────────────────────
+
+  /payments:
+    get:
+      tags: [Payment]
+      summary: Liste tous les paiements
+      operationId: getAllPayments
+      responses:
+        '200':
+          description: Liste des paiements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentResponse'
+    post:
+      tags: [Payment]
+      summary: Créer un paiement
+      operationId: createPayment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+            example:
+              orderId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+              amount: 15000.00
+              paymentType: CASH
+      responses:
+        '201':
+          description: Paiement créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /payments/{id}:
+    parameters:
+      - $ref: '#/components/parameters/UUIDPath'
+    get:
+      tags: [Payment]
+      summary: Récupérer un paiement par ID
+      operationId: getPaymentById
+      responses:
+        '200':
+          description: Paiement trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Payment]
+      summary: Supprimer un paiement
+      operationId: deletePayment
+      responses:
+        '204':
+          description: Paiement supprimé
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /payments/order/{orderId}:
+    get:
+      tags: [Payment]
+      summary: Paiement d'une commande
+      operationId: getPaymentByOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Paiement de la commande
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ─── DELIVERY ──────────────────────────────────────────────────────────────
+
+  /deliveries:
+    get:
+      tags: [Delivery]
+      summary: Liste toutes les livraisons
+      operationId: getAllDeliveries
+      responses:
+        '200':
+          description: Liste des livraisons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeliveryResponse'
+    post:
+      tags: [Delivery]
+      summary: Créer une livraison
+      operationId: createDelivery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryRequest'
+      responses:
+        '201':
+          description: Livraison créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /deliveries/{id}:
+    parameters:
+      - $ref: '#/components/parameters/UUIDPath'
+    get:
+      tags: [Delivery]
+      summary: Récupérer une livraison par ID
+      operationId: getDeliveryById
+      responses:
+        '200':
+          description: Livraison trouvée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /deliveries/{id}/status:
+    put:
+      tags: [Delivery]
+      summary: Mettre à jour le statut d'une livraison
+      description: |
+        Transitions autorisées : PENDING → SHIPPED → DELIVERED
+        La transition CANCELLED est possible depuis n'importe quel état.
+      operationId: updateDeliveryStatus
+      parameters:
+        - $ref: '#/components/parameters/UUIDPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  $ref: '#/components/schemas/DeliveryStatus'
+      responses:
+        '200':
+          description: Statut mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryResponse'
+        '400':
+          description: Transition de statut invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /deliveries/order/{orderId}:
+    get:
+      tags: [Delivery]
+      summary: Livraison d'une commande
+      operationId: getDeliveryByOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Livraison de la commande
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ─── STOCK ─────────────────────────────────────────────────────────────────
+
+  /stocks:
+    post:
+      tags: [Stock]
+      summary: Enregistrer un mouvement de stock
+      description: |
+        Enregistre un mouvement IN (entrée) ou OUT (sortie).
+
+        **Règle :** Un mouvement OUT est refusé si le stock courant
+        est inférieur à la quantité demandée.
+      operationId: createStockMovement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockRequest'
+            examples:
+              entree:
+                summary: Réception fournisseur
+                value:
+                  bookFormatId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                  movement: IN
+                  quantity: 50
+              sortie:
+                summary: Vente
+                value:
+                  bookFormatId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                  movement: OUT
+                  quantity: 5
+      responses:
+        '201':
+          description: Mouvement enregistré
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockResponse'
+        '400':
+          description: Stock insuffisant ou validation échouée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                timestamp: '2026-07-09T10:00:00'
+                status: 400
+                error: Bad Request
+                message: "Insufficient stock: available 3, requested 10"
+                path: /stocks
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /stocks/book-format/{bookFormatId}/current:
+    get:
+      tags: [Stock]
+      summary: Stock courant d'un BookFormat
+      operationId: getCurrentStock
+      parameters:
+        - name: bookFormatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Stock courant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockCurrentResponse'
+              example:
+                bookFormatId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                currentStock: 50
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /stocks/book-format/{bookFormatId}/at-date:
+    get:
+      tags: [Stock]
+      summary: Stock d'un BookFormat à une date donnée
+      operationId: getStockAtDate
+      parameters:
+        - name: bookFormatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+          example: '2026-05-20T23:59:59'
+      responses:
+        '200':
+          description: Stock à la date demandée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockAtDateResponse'
+              example:
+                bookFormatId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                date: '2026-05-20T23:59:59'
+                stockAtDate: 38
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /stocks/book-format/{bookFormatId}/history:
+    get:
+      tags: [Stock]
+      summary: Historique des mouvements d'un BookFormat
+      operationId: getStockHistory
+      parameters:
+        - name: bookFormatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Historique des mouvements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StockResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /stocks/book/{bookId}:
+    get:
+      tags: [Stock]
+      summary: Stock courant par livre et par format
+      description: |
+        Retourne le stock actuel de chaque format d'un même livre.
+
+        **Exemple :**
+        - Les Misérables Broché : 50 exemplaires
+        - Les Misérables Poche  : 23 exemplaires
+      operationId: getStockByBook
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Stock par format pour ce livre
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StockByBookResponse'
+              example:
+                - bookId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                  title: Les Misérables
+                  formatType: Broché
+                  bookFormatId: 4fa85f64-5717-4562-b3fc-2c963f66afa7
+                  price: 15.00
+                  currentStock: 50
+                - bookId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                  title: Les Misérables
+                  formatType: Poche
+                  bookFormatId: 5fa85f64-5717-4562-b3fc-2c963f66afa8
+                  price: 8.00
+                  currentStock: 23
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+# ─── COMPONENTS ────────────────────────────────────────────────────────────────
+
+components:
+
+  parameters:
+    UUIDPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    NotFound:
+      description: Ressource introuvable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            timestamp: '2026-07-09T10:00:00.123456'
+            status: 404
+            error: Not Found
+            message: Book not found with id af58d21a-7869-4238-b041-d6c692f1a5c7
+            path: /books/af58d21a-7869-4238-b041-d6c692f1a5c7
+    ValidationError:
+      description: Erreur de validation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            timestamp: '2026-07-09T10:00:00.123456'
+            status: 400
+            error: Bad Request
+            message: Validation failed
+            path: /authors
+            validationErrors:
+              fullName: Full name is required
+    Conflict:
+      description: Ressource déjà existante
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            timestamp: '2026-07-09T10:00:00.123456'
+            status: 409
+            error: Conflict
+            message: Author already exists with fullName Victor Hugo
+            path: /authors
+
+  schemas:
+
+    # ── Erreur standard ──────────────────────────────────────────────────────
+
+    ApiError:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: '2026-07-09T10:00:00.123456'
+        status:
+          type: integer
+          example: 404
+        error:
+          type: string
+          example: Not Found
+        message:
+          type: string
+          example: Book not found with id af58d21a-7869-4238-b041-d6c692f1a5c7
+        path:
+          type: string
+          example: /books/af58d21a-7869-4238-b041-d6c692f1a5c7
+        validationErrors:
+          type: object
+          additionalProperties:
+            type: string
+          description: Présent uniquement pour les erreurs 400 de validation
+
+    # ── Enums ────────────────────────────────────────────────────────────────
+
+    MovementType:
+      type: string
+      enum: [IN, OUT]
+
+    OrderType:
+      type: string
+      enum: [DELIVERY, DOWNLOAD]
+
+    DeliveryStatus:
+      type: string
+      enum: [PENDING, SHIPPED, DELIVERED, CANCELLED]
+
+    PaymentType:
+      type: string
+      enum: [CARD, BANK_TRANSFER, CASH, MOBILE]
+
+    # ── Author ───────────────────────────────────────────────────────────────
+
+    AuthorRequest:
+      type: object
+      required: [fullName]
+      properties:
+        fullName:
+          type: string
+          maxLength: 100
+          example: Victor Hugo
+        firstname:
+          type: string
+          maxLength: 100
+          example: Victor
+        lastname:
+          type: string
+          maxLength: 100
+          example: Hugo
+        birthDate:
+          type: string
+          format: date
+          example: '1802-02-26'
+
+    AuthorResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+          example: Victor Hugo
+        firstname:
+          type: string
+          example: Victor
+        lastname:
+          type: string
+          example: Hugo
+        birthDate:
+          type: string
+          format: date
+          example: '1802-02-26'
+
+    # ── Book ─────────────────────────────────────────────────────────────────
+
+    BookRequest:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          maxLength: 100
+          example: Les Misérables
+        isbn:
+          type: string
+          maxLength: 100
+          example: '978-2-07-040850-4'
+        description:
+          type: string
+          maxLength: 255
+          example: Roman historique de Victor Hugo
+        url:
+          type: string
+          maxLength: 100
+          example: https://example.com/les-miserables
+        publicationDate:
+          type: string
+          format: date
+          example: '1862-04-03'
+        authorIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        genreIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    BookResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: Les Misérables
+        isbn:
+          type: string
+          example: '978-2-07-040850-4'
+        description:
+          type: string
+        url:
+          type: string
+        creationDate:
+          type: string
+          format: date
+        publicationDate:
+          type: string
+          format: date
+        authors:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorResponse'
+        genres:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenreResponse'
+
+    # ── Format ───────────────────────────────────────────────────────────────
+
+    FormatRequest:
+      type: object
+      required: [formatType]
+      properties:
+        formatType:
+          type: string
+          maxLength: 100
+          example: Broché
+
+    FormatResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        formatType:
+          type: string
+          example: Broché
+
+    # ── BookFormat ───────────────────────────────────────────────────────────
+
+    BookFormatRequest:
+      type: object
+      required: [price, bookId, formatId]
+      properties:
+        price:
+          type: number
+          format: double
+          minimum: 0.01
+          example: 15.00
+        bookId:
+          type: string
+          format: uuid
+        formatId:
+          type: string
+          format: uuid
+
+    BookFormatResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        price:
+          type: number
+          format: double
+          example: 15.00
+        bookId:
+          type: string
+          format: uuid
+        bookTitle:
+          type: string
+          example: Les Misérables
+        formatId:
+          type: string
+          format: uuid
+        formatType:
+          type: string
+          example: Broché
+
+    # ── Genre ────────────────────────────────────────────────────────────────
+
+    GenreRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          example: Romance
+        description:
+          type: string
+          maxLength: 100
+          example: Livres de romance et d'amour
+
+    GenreResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Romance
+        description:
+          type: string
+          example: Livres de romance et d'amour
+
+    GenreRevenueResponse:
+      type: object
+      properties:
+        genreId:
+          type: string
+          format: uuid
+        genreName:
+          type: string
+          example: Romance
+        totalRevenue:
+          type: number
+          format: double
+          example: 730000.00
+          description: Somme de (quantity × unitPrice) de toutes les OrderLines liées à ce genre
+        totalQuantitySold:
+          type: integer
+          example: 146
+          description: Nombre total d'exemplaires vendus pour ce genre
+
+    # ── Customer ─────────────────────────────────────────────────────────────
+
+    CustomerRequest:
+      type: object
+      required: [name, firstname, email]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          example: Rakoto
+        firstname:
+          type: string
+          maxLength: 100
+          example: Jean
+        email:
+          type: string
+          format: email
+          maxLength: 100
+          example: jean.rakoto@example.com
+
+    CustomerResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Rakoto
+        firstname:
+          type: string
+          example: Jean
+        email:
+          type: string
+          example: jean.rakoto@example.com
+
+    # ── Order ─────────────────────────────────────────────────────────────────
+
+    OrderLineRequest:
+      type: object
+      required: [bookFormatId, quantity]
+      properties:
+        bookFormatId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+          example: 2
+
+    OrderRequest:
+      type: object
+      required: [customerId, orderType, lines]
+      properties:
+        customerId:
+          type: string
+          format: uuid
+        orderType:
+          $ref: '#/components/schemas/OrderType'
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/OrderLineRequest'
+
+    OrderLineResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bookFormatId:
+          type: string
+          format: uuid
+        bookTitle:
+          type: string
+          example: Les Misérables
+        formatType:
+          type: string
+          example: Broché
+        quantity:
+          type: integer
+          example: 2
+        unitPrice:
+          type: number
+          format: double
+          example: 15.00
+        totalPrice:
+          type: number
+          format: double
+          example: 30.00
+
+    OrderResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderDate:
+          type: string
+          format: date-time
+        orderType:
+          $ref: '#/components/schemas/OrderType'
+        customerId:
+          type: string
+          format: uuid
+        customerName:
+          type: string
+          example: Jean Rakoto
+        totalAmount:
+          type: number
+          format: double
+          example: 45.00
+          description: Somme de toutes les lignes (quantity × unitPrice)
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderLineResponse'
+
+    # ── Payment ───────────────────────────────────────────────────────────────
+
+    PaymentRequest:
+      type: object
+      required: [orderId, amount, paymentType]
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: double
+          minimum: 0.01
+          example: 45.00
+        paymentType:
+          $ref: '#/components/schemas/PaymentType'
+
+    PaymentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: double
+          example: 45.00
+        paymentDate:
+          type: string
+          format: date-time
+        paymentType:
+          $ref: '#/components/schemas/PaymentType'
+        orderId:
+          type: string
+          format: uuid
+
+    # ── Delivery ──────────────────────────────────────────────────────────────
+
+    DeliveryRequest:
+      type: object
+      required: [orderId, address]
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        address:
+          type: string
+          maxLength: 255
+          example: Lot II B 34 Antananarivo 101
+        expectedDate:
+          type: string
+          format: date
+          example: '2026-07-15'
+
+    DeliveryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        address:
+          type: string
+          example: Lot II B 34 Antananarivo 101
+        status:
+          $ref: '#/components/schemas/DeliveryStatus'
+        expectedDate:
+          type: string
+          format: date
+        effectiveDate:
+          type: string
+          format: date
+        orderId:
+          type: string
+          format: uuid
+
+    # ── Stock ─────────────────────────────────────────────────────────────────
+
+    StockRequest:
+      type: object
+      required: [bookFormatId, movement, quantity]
+      properties:
+        bookFormatId:
+          type: string
+          format: uuid
+        movement:
+          $ref: '#/components/schemas/MovementType'
+        quantity:
+          type: integer
+          minimum: 1
+          example: 50
+
+    StockResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        movement:
+          $ref: '#/components/schemas/MovementType'
+        quantity:
+          type: integer
+          example: 50
+        movementDate:
+          type: string
+          format: date-time
+        bookFormatId:
+          type: string
+          format: uuid
+
+    StockCurrentResponse:
+      type: object
+      properties:
+        bookFormatId:
+          type: string
+          format: uuid
+        currentStock:
+          type: integer
+          example: 50
+
+    StockAtDateResponse:
+      type: object
+      properties:
+        bookFormatId:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date-time
+        stockAtDate:
+          type: integer
+          example: 38
+
+    StockByBookResponse:
+      type: object
+      properties:
+        bookId:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: Les Misérables
+        formatType:
+          type: string
+          example: Broché
+        bookFormatId:
+          type: string
+          format: uuid
+        price:
+          type: number
+          format: double
+          example: 15.00
+        currentStock:
+          type: integer
+          example: 50
