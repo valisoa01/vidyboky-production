@@ -86,7 +86,6 @@ public class StockService {
         .collect(Collectors.toList());
   }
 
-
   @Transactional
   public StockResponse create(StockRequest request) {
     BookFormat bookFormat =
