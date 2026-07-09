@@ -84,7 +84,7 @@ class OrderControllerTest {
             .formatType("EBOOK")
             .quantity(2)
             .unitPrice(19.90)
-            .lineTotal(39.80)
+            .totalPrice(39.80)
             .build();
 
     orderResponse =
