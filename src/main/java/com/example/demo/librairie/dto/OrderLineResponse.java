@@ -13,7 +13,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class OrderLineResponse {
-
   private UUID id;
   private UUID orderId;
   private UUID bookFormatId;

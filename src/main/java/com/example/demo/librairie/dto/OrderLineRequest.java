@@ -16,9 +16,13 @@ import lombok.Setter;
 @Builder
 public class OrderLineRequest {
 
-  @NotNull private UUID orderId;
+  @NotNull(message = "Order ID is required")
+  private UUID orderId;
 
-  @NotNull private UUID bookFormatId;
+  @NotNull(message = "Book format ID is required")
+  private UUID bookFormatId;
 
-  @NotNull @Positive private Integer quantity;
+  @NotNull(message = "Quantity is required")
+  @Positive(message = "Quantity must be greater than 0")
+  private Integer quantity;
 }
