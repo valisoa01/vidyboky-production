@@ -1,6 +1,8 @@
 package com.example.demo.librairie.dto;
 
-import jakarta.persistence.Column;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Getter
@@ -10,13 +12,17 @@ import lombok.*;
 @Builder
 public class CustomerRequest {
 
-  @Column(nullable = false)
+  @NotBlank(message = "First name is required")
+  @Size(max = 100)
   private String firstName;
 
-  @Column(nullable = false)
+  @NotBlank(message = "Last name is required")
+  @Size(max = 100)
   private String name;
 
-  @Column(unique = true, nullable = false)
+  @NotBlank(message = "Email is required")
+  @Email(message = "Invalid email format")
+  @Size(max = 100)
   private String email;
 
   private String phone;
