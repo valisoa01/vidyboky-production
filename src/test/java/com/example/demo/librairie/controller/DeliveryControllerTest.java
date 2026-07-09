@@ -41,7 +41,7 @@ class DeliveryControllerTest {
         DeliveryResponse delivery =
                 DeliveryResponse.builder()
                         .id(UUID.randomUUID())
-                        .address("123 Rue de Paris")
+                        .address("Analakely")
                         .status(DeliveryStatus.PENDING)
                         .expectedDate(LocalDate.now().plusDays(3))
                         .orderId(UUID.randomUUID())
@@ -52,7 +52,7 @@ class DeliveryControllerTest {
         mockMvc
                 .perform(get("/deliveries"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].address").value("123 Rue de Paris"))
+                .andExpect(jsonPath("$[0].address").value("Analakely"))
                 .andExpect(jsonPath("$[0].status").value("PENDING"));
     }
 
@@ -64,7 +64,7 @@ class DeliveryControllerTest {
         DeliveryResponse delivery =
                 DeliveryResponse.builder()
                         .id(id)
-                        .address("123 Rue de Paris")
+                        .address("Analakely")
                         .status(DeliveryStatus.PENDING)
                         .expectedDate(LocalDate.now().plusDays(3))
                         .orderId(UUID.randomUUID())
@@ -76,7 +76,7 @@ class DeliveryControllerTest {
                 .perform(get("/deliveries/{id}", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id.toString()))
-                .andExpect(jsonPath("$.address").value("123 Rue de Paris"));
+                .andExpect(jsonPath("$.address").value("Analakely"));
     }
 
     @Test
@@ -87,7 +87,7 @@ class DeliveryControllerTest {
         DeliveryRequest request =
                 DeliveryRequest.builder()
                         .orderId(orderId)
-                        .address("123 Rue de Paris")
+                        .address("Analakely")
                         .status(DeliveryStatus.PENDING)
                         .expectedDate(LocalDate.now().plusDays(3))
                         .build();
@@ -96,7 +96,7 @@ class DeliveryControllerTest {
                 DeliveryResponse.builder()
                         .id(UUID.randomUUID())
                         .orderId(orderId)
-                        .address("123 Rue de Paris")
+                        .address("Analakely")
                         .status(DeliveryStatus.PENDING)
                         .expectedDate(LocalDate.now().plusDays(3))
                         .build();
@@ -109,7 +109,7 @@ class DeliveryControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.address").value("123 Rue de Paris"));
+                .andExpect(jsonPath("$.address").value("Analakely"));
     }
 
     @Test
@@ -121,7 +121,7 @@ class DeliveryControllerTest {
         DeliveryRequest request =
                 DeliveryRequest.builder()
                         .orderId(orderId)
-                        .address("456 Avenue des Champs")
+                        .address("Ankorondrano")
                         .status(DeliveryStatus.PENDING)
                         .expectedDate(LocalDate.now().plusDays(5))
                         .build();
@@ -130,7 +130,7 @@ class DeliveryControllerTest {
                 DeliveryResponse.builder()
                         .id(id)
                         .orderId(orderId)
-                        .address("456 Avenue des Champs")
+                        .address("Ankorondrano")
                         .status(DeliveryStatus.PENDING)
                         .expectedDate(LocalDate.now().plusDays(5))
                         .build();
@@ -143,7 +143,7 @@ class DeliveryControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.address").value("456 Avenue des Champs"));
+                .andExpect(jsonPath("$.address").value("Ankorondrano"));
     }
 
     @Test
