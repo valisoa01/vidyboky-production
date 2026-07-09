@@ -11,7 +11,6 @@ import lombok.*;
 @Table(name = "author")
 @Getter
 @Setter
-@NoArgsConstructorhttps://docs.poja.io/docs
 @AllArgsConstructor
 @Builder
 public class Author {
