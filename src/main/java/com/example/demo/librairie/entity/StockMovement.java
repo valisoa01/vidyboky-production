@@ -12,7 +12,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Stock {
+public class StockMovement {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)

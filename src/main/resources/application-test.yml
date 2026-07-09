@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    url: ${NEON_DB_URL:jdbc:postgresql://localhost:5432/testdb}
+    username: ${NEON_DB_USERNAME:test}
+    password: ${NEON_DB_PASSWORD:test}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+
+aws:
+  region: ${AWS_REGION:eu-west-3}
+  sqs:
+    queue-url: ${AWS_SQS_QUEUE_URL:http://localhost:4566/queue/test}
+  eventbridge:
+    bus-name: ${AWS_EVENTBRIDGE_BUS_NAME:test-bus}
+  ses:
+    source: ${AWS_SES_SOURCE:noreply@poja.io}
+
+logging:
+  level:
+    com.example.demo: DEBUG
+    org.springframework.test: DEBUG
+    org.springframework.boot.test: DEBUG

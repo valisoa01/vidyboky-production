@@ -30,5 +30,5 @@ public class BookFormat {
   private Format format;
 
   @OneToMany(mappedBy = "bookFormat", cascade = CascadeType.ALL)
-  private List<Stock> stocks;
+  private List<StockMovement> stocks;
 }

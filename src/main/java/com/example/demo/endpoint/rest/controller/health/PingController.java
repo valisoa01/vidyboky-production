@@ -1,8 +1,6 @@
 package com.example.demo.endpoint.rest.controller.health;
 
 import com.example.demo.PojaGenerated;
-import com.example.demo.db.DatabaseConfig;
-import java.sql.Connection;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,14 +19,5 @@ public class PingController {
   @GetMapping("/ping")
   public String ping() {
     return "pong";
-  }
-
-  @GetMapping("/ping-db")
-  public ResponseEntity<String> pingDb() {
-    try (Connection conn = DatabaseConfig.getConnection()) {
-      return ResponseEntity.ok("Connexion Neon OK !");
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body("Erreur : " + e.getMessage());
-    }
   }
 }
