@@ -1,5 +1,6 @@
 package com.example.demo.librairie.controller;
 
+import com.example.demo.librairie.dto.BookStockResponse;
 import com.example.demo.librairie.dto.StockRequest;
 import com.example.demo.librairie.dto.StockResponse;
 import com.example.demo.librairie.service.StockService;
@@ -70,4 +71,10 @@ public class StockController {
     Map<String, Integer> summary = stockService.getStockSummary();
     return ResponseEntity.ok(summary);
   }
+    @GetMapping("/book/{bookId}/stocks")
+    public List<BookStockResponse> getStocksByBook(
+            @PathVariable UUID bookId) {
+
+        return stockService.getStocksByBook(bookId);
+    }
 }
