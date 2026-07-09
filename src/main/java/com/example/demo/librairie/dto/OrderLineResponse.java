@@ -22,11 +22,11 @@ public class OrderLineResponse {
 
     private String bookTitle;
 
-    private String formatName;
+    private String formatType;
 
     private Integer quantity;
 
     private Double unitPrice;
 
-    private Double lineTotal;
+    private Double totalPrice;
 }
