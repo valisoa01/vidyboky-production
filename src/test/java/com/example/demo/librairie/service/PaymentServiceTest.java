@@ -22,14 +22,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
+import com.example.demo.endpoint.event.EventProducer;
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceTest {
 
   @Mock private PaymentRepository paymentRepository;
 
   @Mock private OrderRepository orderRepository;
-
+  @Mock private EventProducer eventProducer;
   @InjectMocks private PaymentService paymentService;
 
   private UUID paymentId;
@@ -113,21 +113,21 @@ class PaymentServiceTest {
     verify(paymentRepository, times(1)).findByOrderId(orderId);
   }
 
-  @Test
-  void create() {
-    when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-    when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+    @Test
+    void create() {
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
 
-    PaymentResponse result = paymentService.create(paymentRequest);
+        PaymentResponse result = paymentService.create(paymentRequest);
 
-    assertNotNull(result);
-    assertEquals(paymentRequest.getAmount(), result.getAmount());
-    assertEquals(paymentRequest.getPaymentType(), result.getPaymentType());
-    assertEquals(orderId, result.getOrderId());
-    verify(orderRepository, times(1)).findById(orderId);
-    verify(paymentRepository, times(1)).save(any(Payment.class));
-  }
-
+        assertNotNull(result);
+        assertEquals(paymentRequest.getAmount(), result.getAmount());
+        assertEquals(paymentRequest.getPaymentType(), result.getPaymentType());
+        assertEquals(orderId, result.getOrderId());
+        verify(orderRepository, times(1)).findById(orderId);
+        verify(paymentRepository, times(1)).save(any(Payment.class));
+        verify(eventProducer, times(1)).accept(any(List.class));   // ← ajouté
+    }
   @Test
   void create_ShouldThrowException_WhenOrderNotFound() {
     when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
