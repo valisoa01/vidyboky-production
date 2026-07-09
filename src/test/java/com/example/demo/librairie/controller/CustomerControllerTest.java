@@ -35,7 +35,6 @@ class CustomerControllerTest {
 
   @Test
   void shouldGetAllCustomers() throws Exception {
-
     CustomerResponse customer =
         CustomerResponse.builder()
             .id(UUID.randomUUID())
@@ -55,7 +54,6 @@ class CustomerControllerTest {
 
   @Test
   void shouldGetCustomerById() throws Exception {
-
     UUID id = UUID.randomUUID();
 
     CustomerResponse customer =
@@ -78,22 +76,21 @@ class CustomerControllerTest {
 
   @Test
   void shouldCreateCustomer() throws Exception {
-
     CustomerRequest request =
         CustomerRequest.builder()
-            .firstName("John")
-            .name("Doe")
-            .email("john@mail.com")
-            .phone("123456")
+            .firstName("Ndrina")
+            .name("Rakotobe")
+            .email("ndrina@mail.com")
+            .phone("0321456987")
             .build();
 
     CustomerResponse response =
         CustomerResponse.builder()
             .id(UUID.randomUUID())
-            .firstName("John")
-            .name("Doe")
-            .email("john@mail.com")
-            .phone("123456")
+            .firstName("Ndrina")
+            .name("Rakotobe")
+            .email("ndrina@mail.com")
+            .phone("0321456987")
             .build();
 
     when(customerService.create(any(CustomerRequest.class))).thenReturn(response);
@@ -104,29 +101,28 @@ class CustomerControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.name").value("Doe"));
+        .andExpect(jsonPath("$.name").value("Rakotobe"));
   }
 
   @Test
   void shouldUpdateCustomer() throws Exception {
-
     UUID id = UUID.randomUUID();
 
     CustomerRequest request =
         CustomerRequest.builder()
-            .firstName("John")
-            .name("Doe")
-            .email("john@mail.com")
-            .phone("123456")
+            .firstName("Ndrina")
+            .name("Rakoto")
+            .email("ndrina@mail.com")
+            .phone("0321456987")
             .build();
 
     CustomerResponse response =
         CustomerResponse.builder()
             .id(id)
-            .firstName("John")
-            .name("Doe")
-            .email("john@mail.com")
-            .phone("123456")
+            .firstName("Ndrina")
+            .name("Rakoto")
+            .email("ndrina@mail.com")
+            .phone("0321456987")
             .build();
 
     when(customerService.update(eq(id), any(CustomerRequest.class))).thenReturn(response);
@@ -137,12 +133,11 @@ class CustomerControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.name").value("Doe"));
+        .andExpect(jsonPath("$.name").value("Rakoto"));
   }
 
   @Test
   void shouldDeleteCustomer() throws Exception {
-
     UUID id = UUID.randomUUID();
 
     doNothing().when(customerService).delete(id);
