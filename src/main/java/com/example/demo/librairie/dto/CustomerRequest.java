@@ -25,5 +25,7 @@ public class CustomerRequest {
   @Size(max = 100)
   private String email;
 
+  @NotBlank(message = "Phone is required")
+  @Size(max = 100)
   private String phone;
 }
