@@ -1,5 +1,7 @@
 package com.example.demo.librairie.service;
 
+import com.example.demo.endpoint.event.EventProducer;
+import com.example.demo.endpoint.event.model.InvoiceRequested;
 import com.example.demo.librairie.dto.PaymentRequest;
 import com.example.demo.librairie.dto.PaymentResponse;
 import com.example.demo.librairie.entity.Order;
@@ -20,6 +22,7 @@ public class PaymentService {
 
   private final PaymentRepository paymentRepository;
   private final OrderRepository orderRepository;
+  private final EventProducer eventProducer;
 
   public List<PaymentResponse> getAll() {
     return paymentRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());
@@ -60,7 +63,12 @@ public class PaymentService {
             .order(order)
             .build();
 
-    return toResponse(paymentRepository.save(payment));
+    Payment savedPayment = paymentRepository.save(payment);
+
+    eventProducer.accept(
+        List.of(InvoiceRequested.builder().orderId(order.getId().toString()).build()));
+
+    return toResponse(savedPayment);
   }
 
   public void delete(UUID id) {
