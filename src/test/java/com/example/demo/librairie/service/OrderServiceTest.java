@@ -121,7 +121,7 @@ class OrderServiceTest {
     assertEquals(1, response.getLines().size());
     assertEquals("Les Misérables", response.getLines().get(0).getBookTitle());
     assertEquals("EBOOK", response.getLines().get(0).getFormatType());
-    assertEquals(39.80, response.getLines().get(0).getLineTotal());
+    assertEquals(39.80, response.getLines().get(0).getTotalPrice());
   }
 
   @Test
