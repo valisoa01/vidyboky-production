@@ -125,7 +125,7 @@ public class OrderService {
                         .formatType(line.getBookFormat().getFormat().getFormatType())
                         .quantity(line.getQuantity())
                         .unitPrice(line.getUnitPrice())
-                            .totalPrice(line.getUnitPrice() * line.getQuantity())
+                        .totalPrice(line.getUnitPrice() * line.getQuantity())
                         .build())
             .collect(Collectors.toList());
 
@@ -216,7 +216,7 @@ public class OrderService {
         .formatType(line.getBookFormat().getFormat().getFormatType())
         .quantity(line.getQuantity())
         .unitPrice(line.getUnitPrice())
-            .totalPrice(line.getUnitPrice() * line.getQuantity())
+        .totalPrice(line.getUnitPrice() * line.getQuantity())
         .build();
   }
 }
