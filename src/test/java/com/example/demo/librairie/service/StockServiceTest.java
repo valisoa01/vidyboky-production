@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.example.demo.librairie.dto.BookStockResponse;
 import com.example.demo.librairie.dto.StockRequest;
 import com.example.demo.librairie.dto.StockResponse;
 import com.example.demo.librairie.entity.Book;
@@ -347,5 +348,89 @@ class StockServiceTest {
 
     assertNotNull(result);
     assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void getStocksByBook_ShouldReturnStockList_WhenBookHasMultipleFormats() {
+    UUID bookId = bookFormat.getBook().getId();
+
+    UUID bookFormatId2 = UUID.randomUUID();
+    Format formatRelie = Format.builder().id(UUID.randomUUID()).formatType("Relié").build();
+    BookFormat bookFormatRelie =
+        BookFormat.builder()
+            .id(bookFormatId2)
+            .book(bookFormat.getBook())
+            .format(formatRelie)
+            .price(24.99)
+            .build();
+
+    StockMovement stockIn2 =
+        StockMovement.builder()
+            .id(UUID.randomUUID())
+            .movement(MovementType.IN)
+            .quantity(20)
+            .movementDate(LocalDateTime.now())
+            .bookFormat(bookFormatRelie)
+            .build();
+
+    when(bookFormatRepository.findByBookId(bookId))
+        .thenReturn(List.of(bookFormat, bookFormatRelie));
+
+    when(bookFormatRepository.existsById(bookFormatId)).thenReturn(true);
+    when(stockRepository.findByBookFormatId(bookFormatId)).thenReturn(List.of(stockIn, stockOut));
+
+    when(bookFormatRepository.existsById(bookFormatId2)).thenReturn(true);
+    when(stockRepository.findByBookFormatId(bookFormatId2)).thenReturn(List.of(stockIn2));
+
+    List<BookStockResponse> result = stockService.getStocksByBook(bookId);
+
+    assertNotNull(result);
+    assertEquals(2, result.size());
+
+    assertEquals(bookFormatId, result.get(0).getBookFormatId());
+    assertEquals("Poche", result.get(0).getFormatType());
+    assertEquals(38, result.get(0).getCurrentStock());
+
+    assertEquals(bookFormatId2, result.get(1).getBookFormatId());
+    assertEquals("Relié", result.get(1).getFormatType());
+    assertEquals(20, result.get(1).getCurrentStock());
+
+    verify(bookFormatRepository, times(1)).findByBookId(bookId);
+    verify(stockRepository, times(1)).findByBookFormatId(bookFormatId);
+    verify(stockRepository, times(1)).findByBookFormatId(bookFormatId2);
+  }
+
+  @Test
+  void getStocksByBook_ShouldReturnEmptyList_WhenBookHasNoFormats() {
+    UUID bookId = UUID.randomUUID();
+    when(bookFormatRepository.findByBookId(bookId)).thenReturn(List.of());
+
+    List<BookStockResponse> result = stockService.getStocksByBook(bookId);
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+
+    verify(bookFormatRepository, times(1)).findByBookId(bookId);
+    verify(stockRepository, never()).findByBookFormatId(any());
+  }
+
+  @Test
+  void getStocksByBook_ShouldReturnZeroStock_WhenFormatHasNoMovements() {
+    UUID bookId = bookFormat.getBook().getId();
+
+    when(bookFormatRepository.findByBookId(bookId)).thenReturn(List.of(bookFormat));
+    when(bookFormatRepository.existsById(bookFormatId)).thenReturn(true);
+    when(stockRepository.findByBookFormatId(bookFormatId)).thenReturn(List.of());
+
+    List<BookStockResponse> result = stockService.getStocksByBook(bookId);
+
+    assertNotNull(result);
+    assertEquals(1, result.size());
+    assertEquals(bookFormatId, result.get(0).getBookFormatId());
+    assertEquals("Poche", result.get(0).getFormatType());
+    assertEquals(0, result.get(0).getCurrentStock());
+
+    verify(bookFormatRepository, times(1)).findByBookId(bookId);
+    verify(stockRepository, times(1)).findByBookFormatId(bookFormatId);
   }
 }
