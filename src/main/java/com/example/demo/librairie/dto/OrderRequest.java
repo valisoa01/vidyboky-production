@@ -26,5 +26,5 @@ public class OrderRequest {
 
   @NotEmpty(message = "An order must contain at least one line")
   @Valid
-  private List<OrderLineRequest> lines;
+  private List<CreateOrderLineRequest> lines;
 }

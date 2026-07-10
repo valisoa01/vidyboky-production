@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.example.demo.librairie.dto.OrderLineRequest;
+import com.example.demo.librairie.dto.CreateOrderLineRequest;
 import com.example.demo.librairie.dto.OrderRequest;
 import com.example.demo.librairie.dto.OrderResponse;
 import com.example.demo.librairie.entity.*;
@@ -92,7 +92,11 @@ class OrderServiceTest {
             .orderType(OrderType.DELIVERY)
             .orderDate(LocalDateTime.of(2026, 7, 1, 10, 0))
             .lines(
-                List.of(OrderLineRequest.builder().bookFormatId(bookFormatId).quantity(2).build()))
+                List.of(
+                    CreateOrderLineRequest.builder()
+                        .bookFormatId(bookFormatId)
+                        .quantity(2)
+                        .build()))
             .build();
   }
 

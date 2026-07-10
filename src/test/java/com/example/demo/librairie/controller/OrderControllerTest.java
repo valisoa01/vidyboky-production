@@ -14,7 +14,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.demo.librairie.dto.OrderLineRequest;
+import com.example.demo.librairie.dto.CreateOrderLineRequest;
 import com.example.demo.librairie.dto.OrderLineResponse;
 import com.example.demo.librairie.dto.OrderRequest;
 import com.example.demo.librairie.dto.OrderResponse;
@@ -78,8 +78,7 @@ class OrderControllerTest {
             .orderDate(LocalDateTime.of(2026, 7, 1, 10, 0))
             .lines(
                 List.of(
-                    OrderLineRequest.builder()
-                        .orderId(orderId)
+                    CreateOrderLineRequest.builder()
                         .bookFormatId(bookFormatId)
                         .quantity(2)
                         .build()))
