@@ -19,9 +19,10 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
-  private final EventProducer eventProducer;
+
   private final PaymentRepository paymentRepository;
   private final OrderRepository orderRepository;
+  private final EventProducer eventProducer;
 
   public List<PaymentResponse> getAll() {
     return paymentRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());

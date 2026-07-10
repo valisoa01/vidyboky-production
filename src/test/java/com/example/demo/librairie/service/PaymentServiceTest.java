@@ -28,9 +28,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class PaymentServiceTest {
 
   @Mock private PaymentRepository paymentRepository;
-  @Mock private EventProducer eventProducer;
-  @Mock private OrderRepository orderRepository;
 
+  @Mock private OrderRepository orderRepository;
+  @Mock private EventProducer eventProducer;
   @InjectMocks private PaymentService paymentService;
 
   private UUID paymentId;
@@ -127,7 +127,7 @@ class PaymentServiceTest {
     assertEquals(orderId, result.getOrderId());
     verify(orderRepository, times(1)).findById(orderId);
     verify(paymentRepository, times(1)).save(any(Payment.class));
-    verify(eventProducer, times(1)).accept(any(List.class));
+    verify(eventProducer, times(1)).accept(any(List.class)); // ← ajouté
   }
 
   @Test
