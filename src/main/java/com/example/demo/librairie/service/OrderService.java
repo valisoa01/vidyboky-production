@@ -1,6 +1,6 @@
 package com.example.demo.librairie.service;
 
-import com.example.demo.librairie.dto.OrderLineRequest;
+import com.example.demo.librairie.dto.CreateOrderLineRequest;
 import com.example.demo.librairie.dto.OrderLineResponse;
 import com.example.demo.librairie.dto.OrderRequest;
 import com.example.demo.librairie.dto.OrderResponse;
@@ -58,7 +58,7 @@ public class OrderService {
 
     List<OrderLine> orderLines = new ArrayList<>();
 
-    for (OrderLineRequest lineRequest : request.getLines()) {
+    for (CreateOrderLineRequest lineRequest : request.getLines()) {
       BookFormat bookFormat =
           bookFormatRepository
               .findById(lineRequest.getBookFormatId())
@@ -169,9 +169,9 @@ public class OrderService {
     orderRepository.deleteById(id);
   }
 
-  private List<OrderLine> buildLines(List<OrderLineRequest> lineRequests, Order order) {
+  private List<OrderLine> buildLines(List<CreateOrderLineRequest> lineRequests, Order order) {
     List<OrderLine> lines = new ArrayList<>();
-    for (OrderLineRequest lineRequest : lineRequests) {
+    for (CreateOrderLineRequest lineRequest : lineRequests) {
       BookFormat bookFormat =
           bookFormatRepository
               .findById(lineRequest.getBookFormatId())
