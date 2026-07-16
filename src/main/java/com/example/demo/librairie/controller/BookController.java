@@ -27,8 +27,7 @@ public class BookController {
   public ResponseEntity<List<BookResponse>> getAll() {
 
     List<BookResponse> responses =
-            bookService.getAll()
-                    .stream()
+            bookService.getAll().stream()
                     .map(bookService::toBookResponse)
                     .toList();
 
@@ -40,18 +39,20 @@ public class BookController {
     return bookService.toBookResponse(bookService.getById(id));
   }
 
-  //recherche par isbn
+  // ======= NOUVEL ENDPOINT =======
   @GetMapping("/isbn/{isbn}")
   public BookResponse getByIsbn(@PathVariable String isbn) {
-    return bookExternalService.findByIsbn(isbn);
+
+    Book book = bookExternalService.getOrFetchByIsbn(isbn);
+
+    return bookService.toBookResponse(book);
   }
 
   @GetMapping("/searchByTitle")
   public ResponseEntity<List<BookResponse>> getByTitle(@RequestParam String title) {
 
     List<BookResponse> responses =
-            bookService.getLivreByTitle(title)
-                    .stream()
+            bookService.getLivreByTitle(title).stream()
                     .map(bookService::toBookResponse)
                     .toList();
 
@@ -63,8 +64,7 @@ public class BookController {
           @PathVariable("genderId") UUID genreId) {
 
     List<BookResponse> responses =
-            bookService.getLivreByGenre(genreId)
-                    .stream()
+            bookService.getLivreByGenre(genreId).stream()
                     .map(bookService::toBookResponse)
                     .toList();
 
@@ -78,8 +78,7 @@ public class BookController {
           LocalDate date) {
 
     List<BookResponse> responses =
-            bookService.getLivreByDate(date)
-                    .stream()
+            bookService.getLivreByDate(date).stream()
                     .map(bookService::toBookResponse)
                     .toList();
 
