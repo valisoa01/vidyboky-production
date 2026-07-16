@@ -106,6 +106,8 @@ class BookControllerTest {
             .genres(Collections.emptyList())
             .authors(null)
             .build();
+
+    when(bookService.toBookResponse(any(Book.class))).thenCallRealMethod();
   }
 
   @Test
