@@ -11,6 +11,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BookRepository extends JpaRepository<Book, UUID> {
 
+  Optional<Book> findByIsbn(String isbn);
+
   List<Book> findByTitleContainingIgnoreCase(String title);
 
   List<Book> findByPublicationDate(LocalDate date);
