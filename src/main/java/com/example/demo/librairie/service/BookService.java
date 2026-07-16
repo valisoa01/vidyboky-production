@@ -97,7 +97,7 @@ public class BookService {
     bookRepository.deleteById(id);
   }
 
-//rendre public toResponse
+  // rendre public toResponse
   public BookResponse toBookResponse(Book book) {
 
     List<AuthorResponse> authorResponses = null;
@@ -105,16 +105,17 @@ public class BookService {
     if (book.getAuthors() != null && !book.getAuthors().isEmpty()) {
 
       authorResponses =
-              book.getAuthors().stream()
-                      .map(author ->
-                              AuthorResponse.builder()
-                                      .id(author.getId())
-                                      .fullName(author.getFullName())
-                                      .firstname(author.getFirstname())
-                                      .lastname(author.getLastname())
-                                      .birthDate(author.getBirthDate())
-                                      .build())
-                      .toList();
+          book.getAuthors().stream()
+              .map(
+                  author ->
+                      AuthorResponse.builder()
+                          .id(author.getId())
+                          .fullName(author.getFullName())
+                          .firstname(author.getFirstname())
+                          .lastname(author.getLastname())
+                          .birthDate(author.getBirthDate())
+                          .build())
+              .toList();
     }
 
     List<GenreResponse> genreResponses = null;
@@ -122,26 +123,27 @@ public class BookService {
     if (book.getGenres() != null && !book.getGenres().isEmpty()) {
 
       genreResponses =
-              book.getGenres().stream()
-                      .map(genre ->
-                              GenreResponse.builder()
-                                      .id(genre.getId())
-                                      .name(genre.getName())
-                                      .description(genre.getDescription())
-                                      .build())
-                      .toList();
+          book.getGenres().stream()
+              .map(
+                  genre ->
+                      GenreResponse.builder()
+                          .id(genre.getId())
+                          .name(genre.getName())
+                          .description(genre.getDescription())
+                          .build())
+              .toList();
     }
 
     return BookResponse.builder()
-            .id(book.getId())
-            .title(book.getTitle())
-            .isbn(book.getIsbn())
-            .description(book.getDescription())
-            .url(book.getUrl())
-            .creationDate(book.getCreationDate())
-            .publicationDate(book.getPublicationDate())
-            .authors(authorResponses)
-            .genres(genreResponses)
-            .build();
+        .id(book.getId())
+        .title(book.getTitle())
+        .isbn(book.getIsbn())
+        .description(book.getDescription())
+        .url(book.getUrl())
+        .creationDate(book.getCreationDate())
+        .publicationDate(book.getPublicationDate())
+        .authors(authorResponses)
+        .genres(genreResponses)
+        .build();
   }
 }

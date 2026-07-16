@@ -27,9 +27,7 @@ public class BookController {
   public ResponseEntity<List<BookResponse>> getAll() {
 
     List<BookResponse> responses =
-            bookService.getAll().stream()
-                    .map(bookService::toBookResponse)
-                    .toList();
+        bookService.getAll().stream().map(bookService::toBookResponse).toList();
 
     return ResponseEntity.ok(responses);
   }
@@ -52,53 +50,41 @@ public class BookController {
   public ResponseEntity<List<BookResponse>> getByTitle(@RequestParam String title) {
 
     List<BookResponse> responses =
-            bookService.getLivreByTitle(title).stream()
-                    .map(bookService::toBookResponse)
-                    .toList();
+        bookService.getLivreByTitle(title).stream().map(bookService::toBookResponse).toList();
 
     return ResponseEntity.ok(responses);
   }
 
   @GetMapping("/search/gender/{genderId}")
-  public ResponseEntity<List<BookResponse>> getByGenre(
-          @PathVariable("genderId") UUID genreId) {
+  public ResponseEntity<List<BookResponse>> getByGenre(@PathVariable("genderId") UUID genreId) {
 
     List<BookResponse> responses =
-            bookService.getLivreByGenre(genreId).stream()
-                    .map(bookService::toBookResponse)
-                    .toList();
+        bookService.getLivreByGenre(genreId).stream().map(bookService::toBookResponse).toList();
 
     return ResponseEntity.ok(responses);
   }
 
   @GetMapping("/searchByDate")
   public ResponseEntity<List<BookResponse>> getByDate(
-          @RequestParam
-          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-          LocalDate date) {
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
     List<BookResponse> responses =
-            bookService.getLivreByDate(date).stream()
-                    .map(bookService::toBookResponse)
-                    .toList();
+        bookService.getLivreByDate(date).stream().map(bookService::toBookResponse).toList();
 
     return ResponseEntity.ok(responses);
   }
 
   @PostMapping
-  public ResponseEntity<BookResponse> create(
-          @Valid @RequestBody BookRequest request) {
+  public ResponseEntity<BookResponse> create(@Valid @RequestBody BookRequest request) {
 
     Book created = bookService.createLivre(request);
 
-    return ResponseEntity.status(HttpStatus.CREATED)
-            .body(bookService.toBookResponse(created));
+    return ResponseEntity.status(HttpStatus.CREATED).body(bookService.toBookResponse(created));
   }
 
   @PutMapping("/{id}")
   public ResponseEntity<BookResponse> update(
-          @PathVariable UUID id,
-          @Valid @RequestBody BookRequest request) {
+      @PathVariable UUID id, @Valid @RequestBody BookRequest request) {
 
     Book updated = bookService.updateLivre(id, request);
 
