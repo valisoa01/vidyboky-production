@@ -97,6 +97,7 @@ public class BookService {
     bookRepository.deleteById(id);
   }
 
+//rendre public toResponse
   public BookResponse toBookResponse(Book book) {
 
     List<AuthorResponse> authorResponses = null;
