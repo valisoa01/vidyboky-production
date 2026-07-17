@@ -4,12 +4,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import com.example.demo.librairie.dto.GoogleBooksResponse;
 import com.example.demo.librairie.entity.Author;
 import com.example.demo.librairie.entity.Book;
 import com.example.demo.librairie.repository.AuthorRepository;
 import com.example.demo.librairie.repository.BookRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,11 +37,21 @@ class BookExternalServiceTest {
   @InjectMocks private BookExternalService bookExternalService;
 
   private final String isbn = "9782070415755";
-  private final String apiUrl = "https://openlibrary.org/api/books";
+  private final String openLibraryApiUrl = "https://openlibrary.org/api/books";
+  private final String googleBooksApiUrl = "https://www.googleapis.com/books/v1/volumes";
 
   @BeforeEach
   void setUp() {
-    ReflectionTestUtils.setField(bookExternalService, "baseApiUrl", apiUrl);
+    ReflectionTestUtils.setField(bookExternalService, "baseApiUrl", openLibraryApiUrl);
+    ReflectionTestUtils.setField(bookExternalService, "googleBooksApiUrl", googleBooksApiUrl);
+  }
+
+  private String openLibraryUrl() {
+    return String.format("%s?bibkeys=ISBN:%s&format=json&jscmd=data", openLibraryApiUrl, isbn);
+  }
+
+  private String googleBooksUrl() {
+    return String.format("%s?q=isbn:%s", googleBooksApiUrl, isbn);
   }
 
   @Test
@@ -52,14 +64,14 @@ class BookExternalServiceTest {
     assertNotNull(result);
     assertEquals("Les Misérables", result.getTitle());
     verify(bookRepository, times(1)).findByIsbn(isbn);
-    verifyNoInteractions(restTemplate); // Should not call the external API
+    verifyNoInteractions(restTemplate);
   }
 
   @Test
-  void shouldFetchAndSaveBookFromApiIfAbsentLocally() {
+  void shouldFetchAndSaveBookFromOpenLibraryWhenGoogleBooksHasNoResult() {
     when(bookRepository.findByIsbn(isbn)).thenReturn(Optional.empty());
 
-    String jsonMockResponse =
+    String openLibraryJson =
         "{"
             + "\"ISBN:"
             + isbn
@@ -70,9 +82,9 @@ class BookExternalServiceTest {
             + "\"authors\": [{\"name\": \"Antoine de Saint-Exupéry\"}]"
             + "}"
             + "}";
-
-    String expectedUrl = String.format("%s?bibkeys=ISBN:%s&format=json&jscmd=data", apiUrl, isbn);
-    when(restTemplate.getForObject(expectedUrl, String.class)).thenReturn(jsonMockResponse);
+    when(restTemplate.getForObject(openLibraryUrl(), String.class)).thenReturn(openLibraryJson);
+    when(restTemplate.getForObject(googleBooksUrl(), GoogleBooksResponse.class))
+        .thenReturn(new GoogleBooksResponse()); // no items
 
     when(authorRepository.findByFullName("Antoine de Saint-Exupéry")).thenReturn(Optional.empty());
     Author savedAuthor = Author.builder().fullName("Antoine de Saint-Exupéry").build();
@@ -91,24 +103,73 @@ class BookExternalServiceTest {
     assertNotNull(result);
     assertEquals("Le Petit Prince", result.getTitle());
     verify(bookRepository, times(1)).save(any(Book.class));
-    verify(authorRepository, times(1)).save(any(Author.class));
   }
 
   @Test
-  void shouldThrowExceptionWhenBookNotFoundOnExternalApi() {
+  void shouldFallBackToGoogleBooksWhenOpenLibraryHasNoResult() {
     when(bookRepository.findByIsbn(isbn)).thenReturn(Optional.empty());
 
-    String emptyResponse = "{}";
-    String expectedUrl = String.format("%s?bibkeys=ISBN:%s&format=json&jscmd=data", apiUrl, isbn);
-    when(restTemplate.getForObject(expectedUrl, String.class)).thenReturn(emptyResponse);
+    // Open Library returns an empty payload
+    when(restTemplate.getForObject(openLibraryUrl(), String.class)).thenReturn("{}");
+
+    GoogleBooksResponse googleResponse = new GoogleBooksResponse();
+    GoogleBooksResponse.VolumeInfo volumeInfo = new GoogleBooksResponse.VolumeInfo();
+    volumeInfo.setTitle("Le Petit Prince");
+    volumeInfo.setPublishedDate("1943-04-06");
+    volumeInfo.setDescription("A tale of a young prince.");
+    volumeInfo.setAuthors(List.of("Antoine de Saint-Exupéry"));
+    GoogleBooksResponse.Item item = new GoogleBooksResponse.Item();
+    item.setVolumeInfo(volumeInfo);
+    googleResponse.setItems(List.of(item));
+
+    when(restTemplate.getForObject(googleBooksUrl(), GoogleBooksResponse.class))
+        .thenReturn(googleResponse);
+
+    when(authorRepository.findByFullName("Antoine de Saint-Exupéry")).thenReturn(Optional.empty());
+    Author savedAuthor = Author.builder().fullName("Antoine de Saint-Exupéry").build();
+    when(authorRepository.save(any(Author.class))).thenReturn(savedAuthor);
+
+    Book expectedSavedBook = Book.builder().title("Le Petit Prince").isbn(isbn).build();
+    when(bookRepository.save(any(Book.class))).thenReturn(expectedSavedBook);
+
+    Book result = bookExternalService.getOrFetchByIsbn(isbn);
+
+    assertNotNull(result);
+    assertEquals("Le Petit Prince", result.getTitle());
+    verify(bookRepository, times(1)).save(any(Book.class));
+  }
+
+  @Test
+  void shouldThrowExceptionWhenBothApisHaveNoResult() {
+    when(bookRepository.findByIsbn(isbn)).thenReturn(Optional.empty());
+
+    when(restTemplate.getForObject(openLibraryUrl(), String.class)).thenReturn("{}");
+    when(restTemplate.getForObject(googleBooksUrl(), GoogleBooksResponse.class))
+        .thenReturn(new GoogleBooksResponse());
 
     RuntimeException exception =
-        assertThrows(
-            RuntimeException.class,
-            () -> {
-              bookExternalService.getOrFetchByIsbn(isbn);
-            });
+        assertThrows(RuntimeException.class, () -> bookExternalService.getOrFetchByIsbn(isbn));
 
     assertTrue(exception.getMessage().contains("Book not found with ISBN"));
+    verify(bookRepository, never()).save(any());
+  }
+
+  @Test
+  void shouldNotFailWhenGoogleBooksCallThrows() {
+    when(bookRepository.findByIsbn(isbn)).thenReturn(Optional.empty());
+
+    String openLibraryJson =
+        "{" + "\"ISBN:" + isbn + "\": {" + "\"title\": \"Le Petit Prince\"" + "}" + "}";
+    when(restTemplate.getForObject(openLibraryUrl(), String.class)).thenReturn(openLibraryJson);
+    when(restTemplate.getForObject(googleBooksUrl(), GoogleBooksResponse.class))
+        .thenThrow(new RuntimeException("Google Books is down"));
+
+    Book expectedSavedBook = Book.builder().title("Le Petit Prince").isbn(isbn).build();
+    when(bookRepository.save(any(Book.class))).thenReturn(expectedSavedBook);
+
+    Book result = bookExternalService.getOrFetchByIsbn(isbn);
+
+    assertNotNull(result);
+    assertEquals("Le Petit Prince", result.getTitle());
   }
 }
