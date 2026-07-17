@@ -1,5 +1,7 @@
 package com.example.demo.librairie.service;
 
+import com.example.demo.librairie.dto.GoogleBooksResponse;
+import com.example.demo.librairie.dto.OpenLibraryResponse;
 import com.example.demo.librairie.entity.Author;
 import com.example.demo.librairie.entity.Book;
 import com.example.demo.librairie.repository.AuthorRepository;
@@ -17,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -32,9 +35,14 @@ public class BookExternalService {
   @Value("${books.api.url}")
   private String baseApiUrl;
 
+  @Value("${google.books.api.url}")
+  private String googleBooksApiUrl;
+
   /**
-   * Retrieves a book by its ISBN. First checks the local database. If absent, fetches from Open
-   * Library, saves it locally, and returns the persisted book.
+   * Retrieves a book by its ISBN. First checks the local database. If absent, queries Open Library
+   * and Google Books in parallel-ish fashion (sequentially, each failure-tolerant), merges the
+   * results (Open Library as primary source, Google Books filling in any gaps), saves it locally,
+   * and returns the persisted book.
    */
   @Transactional
   public Book getOrFetchByIsbn(String isbn) {
@@ -46,13 +54,25 @@ public class BookExternalService {
       return localBook.get();
     }
 
-    log.info("Book not found locally. Querying Open Library API for ISBN: {}", isbn);
-    return fetchFromExternalApi(isbn);
+    log.info("Book not found locally. Querying external APIs for ISBN: {}", isbn);
+    return fetchFromExternalApis(isbn);
   }
 
-  private Book fetchFromExternalApi(String isbn) {
+  private Book fetchFromExternalApis(String isbn) {
+    OpenLibraryResponse openLibraryBook = fetchFromOpenLibrary(isbn);
+    GoogleBooksResponse.VolumeInfo googleBook = fetchFromGoogleBooks(isbn);
+
+    if (openLibraryBook == null && googleBook == null) {
+      log.warn("Book not found on Open Library nor Google Books for ISBN: {}", isbn);
+      throw new RuntimeException("Book not found with ISBN: " + isbn);
+    }
+
+    return mapToBook(openLibraryBook, googleBook, isbn);
+  }
+
+  private OpenLibraryResponse fetchFromOpenLibrary(String isbn) {
     String url = String.format("%s?bibkeys=ISBN:%s&format=json&jscmd=data", baseApiUrl, isbn);
-    log.info("Calling external API: {}", url);
+    log.info("Calling Open Library: {}", url);
 
     try {
       String jsonResponse = restTemplate.getForObject(url, String.class);
@@ -61,61 +81,93 @@ public class BookExternalService {
           || jsonResponse.trim().isEmpty()
           || "{}".equals(jsonResponse.trim())) {
         log.warn("Open Library returned an empty response for ISBN: {}", isbn);
-        throw new RuntimeException("Book not found with ISBN: " + isbn);
+        return null;
       }
 
       JsonNode rootNode = objectMapper.readTree(jsonResponse);
       String bookKey = "ISBN:" + isbn;
 
       if (!rootNode.has(bookKey)) {
-        log.warn("No book entry found for key {} in JSON response", bookKey);
-        throw new RuntimeException("Book not found with ISBN: " + isbn);
+        log.warn("No book entry found for key {} in Open Library response", bookKey);
+        return null;
       }
 
-      JsonNode bookNode = rootNode.get(bookKey);
-      log.info("Book successfully retrieved from Open Library. Starting mapping...");
+      return objectMapper.treeToValue(rootNode.get(bookKey), OpenLibraryResponse.class);
 
-      return mapToBook(bookNode, isbn);
-
-    } catch (RuntimeException e) {
-      throw e;
     } catch (Exception e) {
-      log.error("Failed to fetch book from external API for ISBN: " + isbn, e);
-      throw new RuntimeException(
-          "An error occurred while fetching the book from the external service.");
+      log.error("Failed to fetch book from Open Library for ISBN: " + isbn, e);
+      return null;
     }
   }
 
-  private Book mapToBook(JsonNode bookNode, String isbn) {
-    String title = bookNode.has("title") ? bookNode.get("title").asText() : "Unknown Title";
-    String url = bookNode.has("url") ? bookNode.get("url").asText() : null;
+  private GoogleBooksResponse.VolumeInfo fetchFromGoogleBooks(String isbn) {
+    String url = String.format("%s?q=isbn:%s", googleBooksApiUrl, isbn);
+    log.info("Calling Google Books: {}", url);
 
-    String description = null;
-    if (bookNode.has("description")) {
-      JsonNode descriptionNode = bookNode.get("description");
-      description =
-          descriptionNode.isObject()
-              ? descriptionNode.get("value").asText()
-              : descriptionNode.asText();
+    try {
+      GoogleBooksResponse response = restTemplate.getForObject(url, GoogleBooksResponse.class);
 
-      if (description != null && description.length() > 255) {
-        description = description.substring(0, 252) + "...";
+      if (response == null
+          || response.getItems() == null
+          || response.getItems().isEmpty()
+          || response.getItems().get(0).getVolumeInfo() == null) {
+        log.warn("Google Books returned no result for ISBN: {}", isbn);
+        return null;
       }
+
+      return response.getItems().get(0).getVolumeInfo();
+
+    } catch (Exception e) {
+      log.error("Failed to fetch book from Google Books for ISBN: " + isbn, e);
+      return null;
+    }
+  }
+
+  private Book mapToBook(
+      OpenLibraryResponse openLibraryBook, GoogleBooksResponse.VolumeInfo googleBook, String isbn) {
+
+    String title =
+        firstNonBlank(
+            openLibraryBook != null ? openLibraryBook.getTitle() : null,
+            googleBook != null ? googleBook.getTitle() : null,
+            "Unknown Title");
+
+    String url =
+        firstNonBlank(
+            openLibraryBook != null ? openLibraryBook.getUrl() : null,
+            googleBook != null ? googleBook.getInfoLink() : null,
+            null);
+
+    String description =
+        firstNonBlank(
+            openLibraryBook != null ? openLibraryBook.getDescriptionText() : null,
+            googleBook != null ? googleBook.getDescription() : null,
+            null);
+    if (description != null && description.length() > 255) {
+      description = description.substring(0, 252) + "...";
     }
 
     LocalDate publicationDate = null;
-    if (bookNode.has("publish_date")) {
-      String rawDate = bookNode.get("publish_date").asText();
+    String rawOpenLibraryDate = openLibraryBook != null ? openLibraryBook.getPublishDate() : null;
+    String rawGoogleDate = googleBook != null ? googleBook.getPublishedDate() : null;
+    String rawDate = firstNonBlank(rawOpenLibraryDate, rawGoogleDate, null);
+    if (rawDate != null) {
       publicationDate = parseRobustDate(rawDate);
     }
 
     List<Author> authors = new ArrayList<>();
-    if (bookNode.has("authors")) {
-      for (JsonNode authorNode : bookNode.get("authors")) {
-        if (authorNode.has("name")) {
-          String fullName = authorNode.get("name").asText();
-          Author author = findOrCreateAuthor(fullName);
-          authors.add(author);
+    if (openLibraryBook != null
+        && openLibraryBook.getAuthors() != null
+        && !openLibraryBook.getAuthors().isEmpty()) {
+      for (OpenLibraryResponse.Author authorNode : openLibraryBook.getAuthors()) {
+        if (StringUtils.hasText(authorNode.getName())) {
+          authors.add(findOrCreateAuthor(authorNode.getName()));
+        }
+      }
+    } else if (googleBook != null && googleBook.getAuthors() != null) {
+      for (String authorName : googleBook.getAuthors()) {
+        if (StringUtils.hasText(authorName)) {
+          authors.add(findOrCreateAuthor(authorName));
         }
       }
     }
@@ -136,6 +188,16 @@ public class BookExternalService {
     log.info("Book '{}' successfully saved in database with ID: {}", title, savedBook.getId());
 
     return savedBook;
+  }
+
+  private String firstNonBlank(String a, String b, String fallback) {
+    if (StringUtils.hasText(a)) {
+      return a;
+    }
+    if (StringUtils.hasText(b)) {
+      return b;
+    }
+    return fallback;
   }
 
   private Author findOrCreateAuthor(String fullName) {
