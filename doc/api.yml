@@ -149,6 +149,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/BookResponse'
+
+
     post:
       tags: [Book]
       summary: Créer un livre
@@ -232,6 +234,38 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  # ======= NOUVEL ENDPOINT =======
+  /books/isbn/{isbn}:
+    get:
+      tags: [ Book ]
+      summary: Récupérer un livre par son ISBN
+      operationId: getBookByIsbn
+      parameters:
+        - name: isbn
+          in: path
+          required: true
+          schema:
+            type: string
+          example: '978-2-07-040850-4'
+      responses:
+        '200':
+          description: Livre trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookResponse'
+        '400':
+          description: Format ISBN invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Livre non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
   /books/searchByTitle:
     get:
       tags: [Book]
