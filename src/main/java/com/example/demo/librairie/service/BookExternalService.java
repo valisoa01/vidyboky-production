@@ -4,6 +4,8 @@ import com.example.demo.librairie.dto.GoogleBooksResponse;
 import com.example.demo.librairie.dto.OpenLibraryResponse;
 import com.example.demo.librairie.entity.Author;
 import com.example.demo.librairie.entity.Book;
+import com.example.demo.librairie.exception.ExternalServiceException;
+import com.example.demo.librairie.exception.ResourceNotFoundException;
 import com.example.demo.librairie.repository.AuthorRepository;
 import com.example.demo.librairie.repository.BookRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -20,6 +22,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -46,6 +52,10 @@ public class BookExternalService {
    */
   @Transactional
   public Book getOrFetchByIsbn(String isbn) {
+    if (!StringUtils.hasText(isbn)) {
+      throw new IllegalArgumentException("ISBN must not be blank");
+    }
+
     log.info("Searching for book with ISBN: {}", isbn);
 
     Optional<Book> localBook = bookRepository.findByIsbn(isbn);
@@ -59,12 +69,36 @@ public class BookExternalService {
   }
 
   private Book fetchFromExternalApis(String isbn) {
-    OpenLibraryResponse openLibraryBook = fetchFromOpenLibrary(isbn);
-    GoogleBooksResponse.VolumeInfo googleBook = fetchFromGoogleBooks(isbn);
+    boolean openLibraryFailed = false;
+    boolean googleBooksFailed = false;
+
+    OpenLibraryResponse openLibraryBook = null;
+    try {
+      openLibraryBook = fetchFromOpenLibrary(isbn);
+    } catch (ExternalServiceException e) {
+      log.error("Open Library technical failure for ISBN: {}", isbn, e);
+      openLibraryFailed = true;
+    }
+
+    GoogleBooksResponse.VolumeInfo googleBook = null;
+    try {
+      googleBook = fetchFromGoogleBooks(isbn);
+    } catch (ExternalServiceException e) {
+      log.error("Google Books technical failure for ISBN: {}", isbn, e);
+      googleBooksFailed = true;
+    }
 
     if (openLibraryBook == null && googleBook == null) {
+      if (openLibraryFailed && googleBooksFailed) {
+        // Aucun des deux fournisseurs n'a répondu correctement : c'est une panne technique,
+        // pas une absence de donnée. On ne doit pas dire au client "livre introuvable" alors
+        // qu'on n'a en réalité même pas pu vérifier.
+        throw new ExternalServiceException(
+            "Open Library / Google Books",
+            "both providers are unreachable or failed for ISBN " + isbn);
+      }
       log.warn("Book not found on Open Library nor Google Books for ISBN: {}", isbn);
-      throw new RuntimeException("Book not found with ISBN: " + isbn);
+      throw new ResourceNotFoundException("Book", "ISBN", isbn);
     }
 
     return mapToBook(openLibraryBook, googleBook, isbn);
@@ -74,9 +108,23 @@ public class BookExternalService {
     String url = String.format("%s?bibkeys=ISBN:%s&format=json&jscmd=data", baseApiUrl, isbn);
     log.info("Calling Open Library: {}", url);
 
+    String jsonResponse;
     try {
-      String jsonResponse = restTemplate.getForObject(url, String.class);
+      jsonResponse = restTemplate.getForObject(url, String.class);
+    } catch (ResourceAccessException e) {
+      // Timeout, DNS, connexion refusée... la faute vient du réseau/service, pas de l'ISBN.
+      throw new ExternalServiceException("Open Library", "network error", e);
+    } catch (HttpServerErrorException e) {
+      // 5xx : le service est en panne côté fournisseur.
+      throw new ExternalServiceException("Open Library", "server error " + e.getStatusCode(), e);
+    } catch (HttpClientErrorException e) {
+      // 4xx inattendu (ex: 429 rate-limit, 400 malformé) : problème d'intégration, pas d'ISBN.
+      throw new ExternalServiceException("Open Library", "client error " + e.getStatusCode(), e);
+    } catch (RestClientException e) {
+      throw new ExternalServiceException("Open Library", "call failed", e);
+    }
 
+    try {
       if (jsonResponse == null
           || jsonResponse.trim().isEmpty()
           || "{}".equals(jsonResponse.trim())) {
@@ -95,8 +143,9 @@ public class BookExternalService {
       return objectMapper.treeToValue(rootNode.get(bookKey), OpenLibraryResponse.class);
 
     } catch (Exception e) {
-      log.error("Failed to fetch book from Open Library for ISBN: " + isbn, e);
-      return null;
+      // Réponse reçue mais illisible : c'est un vrai problème d'intégration (format inattendu),
+      // pas une absence de donnée pour cet ISBN.
+      throw new ExternalServiceException("Open Library", "unreadable response", e);
     }
   }
 
@@ -104,23 +153,28 @@ public class BookExternalService {
     String url = String.format("%s?q=isbn:%s", googleBooksApiUrl, isbn);
     log.info("Calling Google Books: {}", url);
 
+    GoogleBooksResponse response;
     try {
-      GoogleBooksResponse response = restTemplate.getForObject(url, GoogleBooksResponse.class);
+      response = restTemplate.getForObject(url, GoogleBooksResponse.class);
+    } catch (ResourceAccessException e) {
+      throw new ExternalServiceException("Google Books", "network error", e);
+    } catch (HttpServerErrorException e) {
+      throw new ExternalServiceException("Google Books", "server error " + e.getStatusCode(), e);
+    } catch (HttpClientErrorException e) {
+      throw new ExternalServiceException("Google Books", "client error " + e.getStatusCode(), e);
+    } catch (RestClientException e) {
+      throw new ExternalServiceException("Google Books", "call failed", e);
+    }
 
-      if (response == null
-          || response.getItems() == null
-          || response.getItems().isEmpty()
-          || response.getItems().get(0).getVolumeInfo() == null) {
-        log.warn("Google Books returned no result for ISBN: {}", isbn);
-        return null;
-      }
-
-      return response.getItems().get(0).getVolumeInfo();
-
-    } catch (Exception e) {
-      log.error("Failed to fetch book from Google Books for ISBN: " + isbn, e);
+    if (response == null
+        || response.getItems() == null
+        || response.getItems().isEmpty()
+        || response.getItems().get(0).getVolumeInfo() == null) {
+      log.warn("Google Books returned no result for ISBN: {}", isbn);
       return null;
     }
+
+    return response.getItems().get(0).getVolumeInfo();
   }
 
   private Book mapToBook(

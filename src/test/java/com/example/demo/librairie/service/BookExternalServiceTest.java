@@ -7,6 +7,8 @@ import static org.mockito.Mockito.*;
 import com.example.demo.librairie.dto.GoogleBooksResponse;
 import com.example.demo.librairie.entity.Author;
 import com.example.demo.librairie.entity.Book;
+import com.example.demo.librairie.exception.ExternalServiceException;
+import com.example.demo.librairie.exception.ResourceNotFoundException;
 import com.example.demo.librairie.repository.AuthorRepository;
 import com.example.demo.librairie.repository.BookRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 @ExtendWith(MockitoExtension.class)
@@ -140,29 +143,31 @@ class BookExternalServiceTest {
   }
 
   @Test
-  void shouldThrowExceptionWhenBothApisHaveNoResult() {
+  void shouldThrowResourceNotFoundExceptionWhenBothApisHaveNoResult() {
     when(bookRepository.findByIsbn(isbn)).thenReturn(Optional.empty());
 
     when(restTemplate.getForObject(openLibraryUrl(), String.class)).thenReturn("{}");
     when(restTemplate.getForObject(googleBooksUrl(), GoogleBooksResponse.class))
         .thenReturn(new GoogleBooksResponse());
 
-    RuntimeException exception =
-        assertThrows(RuntimeException.class, () -> bookExternalService.getOrFetchByIsbn(isbn));
+    ResourceNotFoundException exception =
+        assertThrows(
+            ResourceNotFoundException.class, () -> bookExternalService.getOrFetchByIsbn(isbn));
 
     assertTrue(exception.getMessage().contains("Book not found with ISBN"));
     verify(bookRepository, never()).save(any());
   }
 
   @Test
-  void shouldNotFailWhenGoogleBooksCallThrows() {
+  void shouldSucceedWhenGoogleBooksFailsButOpenLibrarySucceeds() {
     when(bookRepository.findByIsbn(isbn)).thenReturn(Optional.empty());
 
     String openLibraryJson =
         "{" + "\"ISBN:" + isbn + "\": {" + "\"title\": \"Le Petit Prince\"" + "}" + "}";
     when(restTemplate.getForObject(openLibraryUrl(), String.class)).thenReturn(openLibraryJson);
+    // Une vraie panne réseau côté RestTemplate ressemble à ça, pas à un RuntimeException brut.
     when(restTemplate.getForObject(googleBooksUrl(), GoogleBooksResponse.class))
-        .thenThrow(new RuntimeException("Google Books is down"));
+        .thenThrow(new ResourceAccessException("Google Books is down"));
 
     Book expectedSavedBook = Book.builder().title("Le Petit Prince").isbn(isbn).build();
     when(bookRepository.save(any(Book.class))).thenReturn(expectedSavedBook);
@@ -171,5 +176,28 @@ class BookExternalServiceTest {
 
     assertNotNull(result);
     assertEquals("Le Petit Prince", result.getTitle());
+  }
+
+  @Test
+  void shouldThrowExternalServiceExceptionWhenBothProvidersFailTechnically() {
+    when(bookRepository.findByIsbn(isbn)).thenReturn(Optional.empty());
+
+    when(restTemplate.getForObject(openLibraryUrl(), String.class))
+        .thenThrow(new ResourceAccessException("Open Library is down"));
+    when(restTemplate.getForObject(googleBooksUrl(), GoogleBooksResponse.class))
+        .thenThrow(new ResourceAccessException("Google Books is down"));
+
+    // Les deux fournisseurs sont en panne : ce n'est PAS un "livre introuvable" (404),
+    // mais une vraie panne technique qui doit remonter comme telle (502).
+    assertThrows(ExternalServiceException.class, () -> bookExternalService.getOrFetchByIsbn(isbn));
+
+    verify(bookRepository, never()).save(any());
+  }
+
+  @Test
+  void shouldRejectBlankIsbn() {
+    assertThrows(IllegalArgumentException.class, () -> bookExternalService.getOrFetchByIsbn("  "));
+
+    verifyNoInteractions(bookRepository, restTemplate);
   }
 }
