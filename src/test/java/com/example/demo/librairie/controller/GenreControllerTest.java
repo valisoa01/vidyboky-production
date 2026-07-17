@@ -22,7 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class GenreServiceTest {
+class GenreControllerTest {
 
   @Mock private GenreRepository genreRepository;
 
