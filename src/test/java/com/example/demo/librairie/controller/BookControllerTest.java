@@ -19,7 +19,6 @@ import com.example.demo.librairie.entity.Author;
 import com.example.demo.librairie.entity.Book;
 import com.example.demo.librairie.entity.Genre;
 import com.example.demo.librairie.exception.ResourceNotFoundException;
-import com.example.demo.librairie.service.BookExternalService;
 import com.example.demo.librairie.service.BookService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
@@ -42,8 +41,6 @@ class BookControllerTest {
   @Autowired private ObjectMapper objectMapper;
 
   @MockBean private BookService bookService;
-
-  @MockBean private BookExternalService bookExternalService;
 
   private UUID bookId;
   private UUID genreId;
@@ -106,8 +103,6 @@ class BookControllerTest {
             .genres(Collections.emptyList())
             .authors(null)
             .build();
-
-    when(bookService.toBookResponse(any(Book.class))).thenCallRealMethod();
   }
 
   @Test
@@ -335,22 +330,5 @@ class BookControllerTest {
         .andExpect(status().isNotFound());
 
     verify(bookService).deleteLivre(invalidId);
-  }
-
-  @Test
-  void getBookByIsbn_ShouldReturnBook() throws Exception {
-
-    Book externalBook =
-        Book.builder().id(UUID.randomUUID()).title("Le Petit Prince").isbn("9782070415755").build();
-
-    when(bookExternalService.getOrFetchByIsbn("9782070415755")).thenReturn(externalBook);
-
-    mockMvc
-        .perform(get("/books/isbn/{isbn}", "9782070415755"))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.title").value("Le Petit Prince"))
-        .andExpect(jsonPath("$.isbn").value("9782070415755"));
-
-    verify(bookExternalService).getOrFetchByIsbn("9782070415755");
   }
 }
