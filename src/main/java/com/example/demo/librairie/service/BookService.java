@@ -1,6 +1,9 @@
 package com.example.demo.librairie.service;
 
+import com.example.demo.librairie.dto.AuthorResponse;
 import com.example.demo.librairie.dto.BookRequest;
+import com.example.demo.librairie.dto.BookResponse;
+import com.example.demo.librairie.dto.GenreResponse;
 import com.example.demo.librairie.entity.Author;
 import com.example.demo.librairie.entity.Book;
 import com.example.demo.librairie.entity.Genre;
@@ -92,5 +95,55 @@ public class BookService {
       throw new ResourceNotFoundException("Book", id);
     }
     bookRepository.deleteById(id);
+  }
+
+  // rendre public toResponse
+  public BookResponse toBookResponse(Book book) {
+
+    List<AuthorResponse> authorResponses = null;
+
+    if (book.getAuthors() != null && !book.getAuthors().isEmpty()) {
+
+      authorResponses =
+          book.getAuthors().stream()
+              .map(
+                  author ->
+                      AuthorResponse.builder()
+                          .id(author.getId())
+                          .fullName(author.getFullName())
+                          .firstname(author.getFirstname())
+                          .lastname(author.getLastname())
+                          .birthDate(author.getBirthDate())
+                          .build())
+              .toList();
+    }
+
+    List<GenreResponse> genreResponses = null;
+
+    if (book.getGenres() != null && !book.getGenres().isEmpty()) {
+
+      genreResponses =
+          book.getGenres().stream()
+              .map(
+                  genre ->
+                      GenreResponse.builder()
+                          .id(genre.getId())
+                          .name(genre.getName())
+                          .description(genre.getDescription())
+                          .build())
+              .toList();
+    }
+
+    return BookResponse.builder()
+        .id(book.getId())
+        .title(book.getTitle())
+        .isbn(book.getIsbn())
+        .description(book.getDescription())
+        .url(book.getUrl())
+        .creationDate(book.getCreationDate())
+        .publicationDate(book.getPublicationDate())
+        .authors(authorResponses)
+        .genres(genreResponses)
+        .build();
   }
 }
